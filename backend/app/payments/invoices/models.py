@@ -188,8 +188,16 @@ class Invoice(Base):
     # money on it is handled as on any closed invoice (PLAN.md section 4; migration 0032, 2026-10-21).
     refreshed_from_invoice_id: Mapped[str | None] = mapped_column(String(26), ForeignKey("invoices.id"))
     refreshed_into_invoice_id: Mapped[str | None] = mapped_column(String(26))
+    # The payment window and the accepted shortfall in force: the chain's, resolved when the invoice was made (the
+    # maker's value, else the account's saved default for the chain, else the server's). While the payer still picks
+    # among several chains, the longest of their windows and the first chain's shortfall; the pick sets the chosen
+    # chain's from ``payment_terms_by_chain``.
     lifetime_seconds: Mapped[int] = mapped_column(Integer)
     accuracy_percent: Mapped[Decimal] = mapped_column(Numeric(4, 2))
+    # Each offered chain's resolved terms, `{"polygon": {"lifetime_seconds": 1800, "accuracy_percent": "1.0"}}`, kept
+    # only on an invoice offering several chains, so a later settings change moves no invoice (migration 0037). Null on
+    # a one-chain invoice and on every invoice made before it: the two columns above then stand for any pick.
+    payment_terms_by_chain: Mapped[dict[str, dict[str, JsonValue]] | None] = mapped_column(JSONB)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     underpaid_open_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

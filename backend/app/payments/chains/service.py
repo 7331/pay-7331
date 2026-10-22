@@ -1,6 +1,11 @@
 """ChainsService: the registry of enabled chains, read once per process from backend/chains.toml."""
 
 from app.payments.chains.errors import AssetNotSupportedError, ChainKindNotSupportedError, ChainNotEnabledError
+from app.payments.chains.invoice_payment_terms import (
+    DEFAULT_ACCURACY_PERCENT,
+    DEFAULT_INVOICE_LIFETIME_SECONDS,
+    format_accuracy_percent,
+)
 from app.payments.chains.schemas import ChainAsset, ChainListResponse, InvoiceChain, ListedChainResponse
 from app.payments.chains.types import (
     AssetConfiguration,
@@ -96,4 +101,6 @@ def present_listed_chain(chain: ChainConfiguration) -> ListedChainResponse:
         confirmations_final=invoice_chain.confirmations_final,
         assets=[present_asset(asset) for asset in chain.assets],
         default_accepted_assets=chain.default_accepted_asset_symbols,
+        default_invoice_lifetime_seconds=DEFAULT_INVOICE_LIFETIME_SECONDS,
+        default_accuracy_percent=format_accuracy_percent(DEFAULT_ACCURACY_PERCENT),
     )

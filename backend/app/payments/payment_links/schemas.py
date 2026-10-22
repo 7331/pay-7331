@@ -1,21 +1,18 @@
 """Quantity link request bodies and resources. Amounts are decimal strings."""
 
 from datetime import datetime
-from decimal import Decimal
 from typing import Annotated
 
 from pydantic import BeforeValidator, Field
 
+from app.payments.chains.invoice_payment_terms import AccuracyPercent, InvoiceLifetimeSeconds
 from app.payments.chains.schemas import InvoiceChain
 from app.payments.invoices.enums import FiatCurrency
 from app.payments.invoices.schemas import (
     ADDRESS_PATTERN,
     DECIMAL_TEXT_PATTERN,
-    DEFAULT_LIFETIME_SECONDS,
     MAXIMUM_INVOICE_ASSETS,
-    MAXIMUM_LIFETIME_SECONDS,
     MAXIMUM_OFFERED_CHAINS,
-    MINIMUM_LIFETIME_SECONDS,
     AssetsByChain,
     AssetSymbol,
     ChainKey,
@@ -56,10 +53,10 @@ class CreatePaymentLinkRequest(ApiRequest):
     allow_contract_destination: bool = False
     note: MultilineText = Field(default="", max_length=500)
     quantity: int = Field(ge=1, le=MAXIMUM_PAYMENT_LINK_QUANTITY)
-    lifetime_seconds: int = Field(
-        default=DEFAULT_LIFETIME_SECONDS, ge=MINIMUM_LIFETIME_SECONDS, le=MAXIMUM_LIFETIME_SECONDS
-    )
-    accuracy_percent: Decimal = Field(default=Decimal("1.0"), ge=0, le=5, max_digits=4, decimal_places=2)
+    # Each payer's invoice's payment window and accepted shortfall. Left out (or null), each payer's invoice takes the
+    # account's saved default for the chain the payer picks, as it stands when that payer taps, else the server's.
+    lifetime_seconds: InvoiceLifetimeSeconds | None = None
+    accuracy_percent: AccuracyPercent | None = None
     return_url: WebPageUrl | None = None
 
 
@@ -88,8 +85,10 @@ class PaymentLinkPublicResponse(ApiResponse):
 
 class PaymentLinkAccountResponse(PaymentLinkPublicResponse):
     destination_address: str
-    lifetime_seconds: int
-    accuracy_percent: str
+    # As the link was made: null means each payer's invoice takes the account's default for its chain, else the
+    # server's (each invoice's own `expires_at` and `accuracy_percent` say what it got).
+    lifetime_seconds: int | None
+    accuracy_percent: str | None
     return_url: str | None
     # Invoices paid, underpaid, confirming or still open; paid ones are `paid_count`.
     slots_held: int

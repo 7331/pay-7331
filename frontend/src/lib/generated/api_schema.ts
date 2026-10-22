@@ -461,7 +461,8 @@ export interface paths {
         /**
          * Update Current Account
          * @description The signed-in account's settings: the coins its invoices start with ticked, per chain, the confirmations its
-         *     XMR invoices count final at, per Monero chain, and the support contact its payers see. Only
+         *     XMR invoices count final at, per Monero chain, the payment window and accepted shortfall its invoices take per
+         *     chain when their maker sets none, and the support contact its payers see. Only
          *     the fields sent change. Answers the session view as ``GET /sessions/current`` would after the change. The payout
          *     address is not here: it changes only behind a fresh passkey check
          *     (``PUT /accounts/current/payout-address``).
@@ -740,7 +741,8 @@ export interface paths {
          *     coin amount's single coin was no pick, so it saves nothing); a server's invoices change no
          *     setting. With no network field it offers every enabled EVM chain; with no coin field a fiat invoice takes the
          *     account's saved coins on each chain and a coin amount its own coin, so ``amount`` and ``currency`` alone make an
-         *     invoice.
+         *     invoice. ``lifetime_seconds`` and ``accuracy_percent`` apply to every offered chain; left out, each chain takes the
+         *     account's saved default for it, else the server's (30 minutes, 1%).
          */
         post: operations["create_account_invoice"];
         delete?: never;
@@ -962,7 +964,8 @@ export interface paths {
          * @description Anyone's USD invoice on every enabled EVM chain with a factory (or the ``chains`` or ``assets_by_chain`` named),
          *     in the ticked assets or else every asset of each; the payer picks the chain and coin. Signed out the receiver
          *     address is required; signed in it defaults to the account's payout address, the invoice is the
-         *     account's and each offered chain's coins become the account's starting coins there.
+         *     account's and each offered chain's coins become the account's starting coins there, and each offered chain takes the
+         *     account's saved payment window and shortfall for it (else the server's: 30 minutes, 1%).
          */
         post: operations["create_public_invoice"];
         delete?: never;
@@ -1335,7 +1338,13 @@ export interface components {
             accepted_assets_by_chain: {
                 [key: string]: string[];
             };
+            accuracy_percent_by_chain: {
+                [key: string]: string;
+            };
             confirmations_final_by_chain: {
+                [key: string]: number;
+            };
+            invoice_lifetime_seconds_by_chain: {
                 [key: string]: number;
             };
             payout_address: string;
@@ -1424,8 +1433,7 @@ export interface components {
             name: string;
         };
         CreateInvoiceRequest: {
-            /** @default 1.0 */
-            accuracy_percent: number | string;
+            accuracy_percent?: number | string | null;
             /** @default false */
             allow_contract_destination: boolean;
             amount: string;
@@ -1438,8 +1446,7 @@ export interface components {
             chains?: string[] | null;
             currency: string;
             destination_address?: string | null;
-            /** @default 1800 */
-            lifetime_seconds: number;
+            lifetime_seconds?: number | null;
             metadata?: {
                 [key: string]: components["schemas"]["JsonValue"];
             } | null;
@@ -1457,8 +1464,7 @@ export interface components {
          *     ``underpaid_open_until``: each invoice gets its own order id, and an absolute time would not repeat), plus when.
          */
         CreateInvoiceScheduleRequest: {
-            /** @default 1.0 */
-            accuracy_percent: number | string;
+            accuracy_percent?: number | string | null;
             /** @default false */
             allow_contract_destination: boolean;
             amount: string;
@@ -1474,8 +1480,7 @@ export interface components {
             ends_after_invoice_count?: number | null;
             ends_at?: string | null;
             interval: components["schemas"]["InvoiceScheduleInterval"];
-            /** @default 43200 */
-            lifetime_seconds: number;
+            lifetime_seconds?: number | null;
             metadata?: {
                 [key: string]: components["schemas"]["JsonValue"];
             } | null;
@@ -1492,8 +1497,7 @@ export interface components {
             chain?: string | null;
         };
         CreatePaymentLinkRequest: {
-            /** @default 1.0 */
-            accuracy_percent: number | string;
+            accuracy_percent?: number | string | null;
             /** @default false */
             allow_contract_destination: boolean;
             amount: string;
@@ -1505,8 +1509,7 @@ export interface components {
             chains?: string[] | null;
             currency: components["schemas"]["FiatCurrency"];
             destination_address?: string | null;
-            /** @default 1800 */
-            lifetime_seconds: number;
+            lifetime_seconds?: number | null;
             /** @default  */
             note: string;
             quantity: number;
@@ -1734,7 +1737,7 @@ export interface components {
             invoice_schedules: components["schemas"]["InvoiceScheduleResponse"][];
         };
         InvoiceScheduleResponse: {
-            accuracy_percent: string;
+            accuracy_percent: string | null;
             amount: string;
             assets: string[];
             assets_by_chain: {
@@ -1755,7 +1758,7 @@ export interface components {
             last_failure_at: string | null;
             last_failure_code: string | null;
             last_invoice_created_at: string | null;
-            lifetime_seconds: number;
+            lifetime_seconds: number | null;
             metadata: {
                 [key: string]: components["schemas"]["JsonValue"];
             } | null;
@@ -1805,6 +1808,8 @@ export interface components {
             chain_id: number | null;
             confirmations_final: number | null;
             default_accepted_assets: string[];
+            default_accuracy_percent: string;
+            default_invoice_lifetime_seconds: number;
             expected_finality_seconds: number;
             explorer_url: string;
             key: string;
@@ -1888,7 +1893,7 @@ export interface components {
             outcome: components["schemas"]["PaymentCheckOutcome"];
         };
         PaymentLinkAccountResponse: {
-            accuracy_percent: string;
+            accuracy_percent: string | null;
             assets: string[];
             chain: components["schemas"]["InvoiceChain"];
             closed_at: string | null;
@@ -1897,7 +1902,7 @@ export interface components {
             destination_address: string;
             fiat: components["schemas"]["InvoiceFiat"];
             id: string;
-            lifetime_seconds: number;
+            lifetime_seconds: number | null;
             note: string;
             paid_count: number;
             payment_options: components["schemas"]["PaymentOption"][];
@@ -1909,7 +1914,7 @@ export interface components {
             url: string;
         };
         PaymentLinkDetailResponse: {
-            accuracy_percent: string;
+            accuracy_percent: string | null;
             assets: string[];
             chain: components["schemas"]["InvoiceChain"];
             closed_at: string | null;
@@ -1919,7 +1924,7 @@ export interface components {
             fiat: components["schemas"]["InvoiceFiat"];
             id: string;
             invoices: components["schemas"]["InvoiceAccountResponse"][];
-            lifetime_seconds: number;
+            lifetime_seconds: number | null;
             note: string;
             paid_count: number;
             payment_options: components["schemas"]["PaymentOption"][];
@@ -2112,7 +2117,13 @@ export interface components {
             accepted_assets_by_chain?: {
                 [key: string]: string[];
             } | null;
+            accuracy_percent_by_chain?: {
+                [key: string]: number | string | null;
+            } | null;
             confirmations_final_by_chain?: {
+                [key: string]: number | null;
+            } | null;
+            invoice_lifetime_seconds_by_chain?: {
                 [key: string]: number | null;
             } | null;
             support_contact?: string | null;

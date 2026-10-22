@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.payments.accounts.types import AccountAccess, AccountApiTokenAccess
 from app.payments.chains.errors import ChainKindNotSupportedError
+from app.payments.chains.invoice_payment_terms import format_accuracy_percent
 from app.payments.chains.types import AssetConfiguration, EvmChainConfiguration
 from app.payments.invoice_schedules.configuration import InvoiceScheduleSettings, read_invoice_schedule_settings
 from app.payments.invoice_schedules.enums import InvoiceScheduleInterval, InvoiceScheduleStatus
@@ -44,6 +45,7 @@ from app.payments.invoice_schedules.periods import (
 )
 from app.payments.invoice_schedules.repository import InvoiceScheduleRepository
 from app.payments.invoice_schedules.schemas import (
+    DEFAULT_SCHEDULED_INVOICE_LIFETIME_SECONDS,
     CreateInvoiceScheduleRequest,
     InvoiceScheduleInvoiceListResponse,
     InvoiceScheduleListResponse,
@@ -135,7 +137,11 @@ def present_invoice_schedule(invoice_schedule: InvoiceSchedule) -> InvoiceSchedu
         metadata=invoice_schedule.private_metadata,
         order_id_prefix=order_id_prefix_of(invoice_schedule),
         lifetime_seconds=invoice_schedule.lifetime_seconds,
-        accuracy_percent=format(invoice_schedule.accuracy_percent.normalize(), "f"),
+        accuracy_percent=(
+            format_accuracy_percent(invoice_schedule.accuracy_percent)
+            if invoice_schedule.accuracy_percent is not None
+            else None
+        ),
         return_url=invoice_schedule.return_url,
         success_url=invoice_schedule.success_url,
         callback_url=invoice_schedule.callback_url,
@@ -480,6 +486,7 @@ class InvoiceScheduleService:
                 order_id=f"{order_id_prefix_of(invoice_schedule)}-{format_period_day(period_start)}",
                 lifetime_seconds=invoice_schedule.lifetime_seconds,
                 accuracy_percent=invoice_schedule.accuracy_percent,
+                default_lifetime_seconds=DEFAULT_SCHEDULED_INVOICE_LIFETIME_SECONDS,
                 return_url=invoice_schedule.return_url,
                 success_url=invoice_schedule.success_url,
                 callback_url=invoice_schedule.callback_url,

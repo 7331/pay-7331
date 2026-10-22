@@ -200,13 +200,24 @@ amounts are `numeric(20,2)`. Only configured assets are accepted (no fee-on-tran
   stablecoin (`usd_peg`) is priced at exactly 1 USD within 0.5% of the peg and at its feed price but never above 1 USD
   off it (2026-10-13), so a feed above the peg never asks fewer coins than the fiat amount's USD worth. It holds until
   `expires_at` (lifetime, default 30 min, 5 min to 12 h, as Cryptomus). A crypto-denominated invoice has no quote.
+- Payment window and accepted shortfall per chain (2026-10-22): `lifetime_seconds` and `accuracy_percent` on
+  `POST /invoices`, a quantity link or a schedule are optional. A value sent applies to every chain of that invoice,
+  link or schedule. Left out, each chain takes the account's saved default for it (`/settings`' Coins sheet,
+  `invoice_lifetime_seconds_by_chain` and `accuracy_percent_by_chain`), else the server's (30 minutes, 1%; a
+  schedule's invoice 12 hours, 1%); a signed-out invoice takes the server's. They are resolved once, when the chain is
+  known: a one-chain invoice gets its chain's at creation; an invoice offering several chains snapshots every offered
+  chain's in `invoices.payment_terms_by_chain` at creation, waits for the pick with the longest of their windows (and
+  the first chain's shortfall, which nothing reads before a pick), and on the pick takes the chosen chain's window
+  (restarted from the pick, as before) and shortfall. A link or schedule made without them stores null and resolves
+  per chain each time it makes an invoice. Settings changed later never move an existing invoice, as the payout
+  address. The accounting reads the invoice's own `accuracy_percent`, the resolved one.
 - Valuing money in a fiat invoice: each finalized rise in gross received is a credit valued at the quote live at the
   block time of the newest final payment in the rise, or, when none is live, at the price (pegged and capped as above) when the watcher sees
   it final. A payment mined inside its quote keeps that quote however late it is finalized or credited (2026-10-09:
   valuing at the finalized head's time underpaid a payer who paid in time); a rise no payment row explains uses the
   finalized head's time. So a dust payment cannot hold an old price open. An underpaid invoice whose quote has lapsed gets a fresh quote for the remainder when
   the payer opens it (`POST /public/invoices/{id}/quote`, one live quote at a time).
-- `accuracy_percent` (default 1.0, 0-5): paid once the shortfall is at most `accuracy_percent` of the amount (as
+- `accuracy_percent` (default 1.0, 0-5, per chain as above): paid once the shortfall is at most `accuracy_percent` of the amount (as
   Cryptomus `accuracy_payment_percent`). An excess below `minimum_refund_usd` (default 1.00) is kept.
 
 | Status | Meaning |
@@ -226,7 +237,8 @@ amounts are `numeric(20,2)`. Only configured assets are accepted (no fee-on-tran
   invoice's underpaid money stays in the deposit for top-ups; it reaches the receiver when topped up, when anyone runs
   the factory's permissionless sweep, or when the operator runs `sweep-invoice`.
 - Creation: an account invoice (`POST /invoices`) or a signed-out one (`POST /public/invoices`, USD, the first
-  chain, the assets its maker ticked or else every asset, 30 minutes, 1% accuracy). A fiat amount is at least 1.00 (USD or EUR); every web creation is
+  chain, the assets its maker ticked or else every asset; signed out 30 minutes and 1% accuracy, signed in the account's
+  per-chain defaults, else those). A fiat amount is at least 1.00 (USD or EUR); every web creation is
   counted against the per-IP open-invoice cap (section 9), never screened (only sign-up is). Each invoice keeps the salted hash of its creator's
   network (`client_ip_hash`), never the IP.
 - Refreshing an expired order (2026-10-21, Cryptomus `is_refresh`): `POST /invoices` with an `order_id` and
@@ -632,7 +644,11 @@ payer pages. Sign-up is open to anyone.
   symbols each, matched case-insensitively; chains left out keep theirs; unknown chain 400 `chain_not_enabled`,
   unknown symbol 400 `asset_not_supported`) saves the coins the account's invoices start with ticked, per chain, and
   returns the session view. Making a fiat invoice signed in (`POST /invoices`, `POST /public/invoices`) saves that
-  invoice's coins the same way; there is no separate "save as default". `support_contact` (2026-10-11): an email
+  invoice's coins the same way; there is no separate "save as default". `confirmations_final_by_chain` (a Monero
+  chain's count, 1-100), `invoice_lifetime_seconds_by_chain` (300-43200) and `accuracy_percent_by_chain` (0-5, a number
+  or a decimal string, at most 2 decimals; 2026-10-22) take `{chain key: value}`: a chain left out keeps its saved
+  value, `null` clears it back to the default, an unknown or disabled chain is 400 `chain_not_enabled`; invoices
+  already made keep theirs. `support_contact` (2026-10-11): an email
   address, a Telegram handle (`@name`, 5-32 of `[A-Za-z0-9_]`) or an https link, at most 200 characters; "" or null
   clears it; anything else 400. The payout address is not here.
 - Payout address change (2026-10-11), behind a fresh passkey check so a stolen session cannot redirect payouts:
@@ -710,7 +726,8 @@ Account (the session's own invoices only; another account's id is 404):
   a row lock on the link, so a link never sells more than its quantity):
   `POST /payment-links` (`amount`, `currency` USD or EUR, `chain`, `assets`, `destination_address` (defaults to the
   payout address, fixed on the link), `allow_contract_destination`, `note`, `quantity` 1-1000, `lifetime_seconds`,
-  `accuracy_percent`, `return_url`; each payer's invoice gets these), `GET /payment-links` (newest 100),
+  `accuracy_percent`, `return_url`; each payer's invoice gets these, and a link made without the window or shortfall
+  gives each payer's invoice the account's default for the chain picked), `GET /payment-links` (newest 100),
   `GET /payment-links/{id}` (with its invoices, newest 200), `POST /payment-links/{id}/close` (no new payers).
   `POST /payment-links` counts as a public write. Each also by an API token (2026-10-21); a token's link saves no
   coins as the account's default.
@@ -726,7 +743,7 @@ Public (rate-limited; never screened, only sign-up is, section 9):
 - `POST /public/invoices`: `amount_usd` (at least 1.00, 2 decimals), `assets` (optional, the symbols the maker
   ticked, as in `POST /invoices`; left out, every asset of the chain; an unknown one is 400 `asset_not_supported`),
   `destination_address` (required signed out, 400 `destination_required`; signed in it defaults to the payout
-  address), `note`. A one-off USD invoice on the first chain that takes invoices (`GET /chains` lists it first), 30 minutes, 1% accuracy, no `order_id`, `metadata` or `return_url`. Signed in, the invoice
+  address), `note`. A one-off USD invoice on the first chain that takes invoices (`GET /chains` lists it first), 30 minutes and 1% accuracy signed out (signed in, the account's per-chain defaults, else those), no `order_id`, `metadata` or `return_url`. Signed in, the invoice
   belongs to the account. Returns the public view; 429 `too_many_open_invoices` past the per-IP cap.
 - `GET /public/invoices/{id}`: the payer's view (no metadata).
 - `GET /public/invoices/{id}/qr.svg?kind=payment|address`.
@@ -840,7 +857,9 @@ Times are ISO 8601 UTC strings; asset and fiat amounts are decimal strings. `GET
   "quantity": 10, "slots_left": 7, "chain": {...}, "assets": ["POL", "USDC"], "payment_options": [...], "fiat":
   {"currency": "USD", "amount": "5.00", "usd": "5.00", "eur": "4.46"}, "note": "...", "created_at": "..."}`; `status`
   is `open`, `all_taken` (no slot free, some held by unpaid invoices that may expire), `sold_out` (every slot paid)
-  or `closed`. The account view adds `destination_address`, `lifetime_seconds`, `accuracy_percent`, `return_url`,
+  or `closed`. The account view adds `destination_address`, `lifetime_seconds` and `accuracy_percent` (null when made
+  without them: each payer's invoice takes its chain's default, and the invoice's own `expires_at` and
+  `accuracy_percent` say what it got), `return_url`,
   `slots_held`, `paid_count`, `closed_at`; `GET /payment-links/{id}` adds `invoices` (account views);
   `GET /payment-links` returns `{"payment_links": [...]}`. `POST /public/payment-links/{id}/invoices`
   `{"asset": "USDC"}` returns the public view of the payer's new invoice.
@@ -849,7 +868,8 @@ Times are ISO 8601 UTC strings; asset and fiat amounts are decimal strings. `GET
   once ended and while paused),
   "created_invoice_count", "last_invoice_created_at", "last_failure_code", "last_failure_at", "amount": "5",
   "currency": "USD", "chains", "assets", "assets_by_chain", "destination_address", "note", "metadata",
-  "order_id_prefix", "lifetime_seconds", "accuracy_percent", "return_url", "success_url", "callback_url",
+  "order_id_prefix", "lifetime_seconds", "accuracy_percent" (both null when made without them: each invoice takes its
+  chain's default), "return_url", "success_url", "callback_url",
   "paused_at", "ended_at", "created_at", "updated_at"}`; `status` is `active`, `paused`, `cancelled` or
   `completed`. `GET /invoice-schedules` returns `{"invoice_schedules": [...]}` (at most 100, active and paused first,
   then newest), `GET .../invoices`
@@ -891,8 +911,10 @@ Times are ISO 8601 UTC strings; asset and fiat amounts are decimal strings. `GET
   Excel may still run one after a save and reopen). Each batch of 200 invoices is read in one REPEATABLE READ
   read-only transaction, so an invoice's rows agree with each other.
 - `GET /api/v1/chains` returns `{"chains": [{"key", "name", "chain_id", "explorer_url", "assets": [{"symbol", "name",
-  "decimals", "token_address"}], "default_accepted_assets": ["POL", "USDC", "USDT"]}]}`; `default_accepted_assets`
-  are the coins a new invoice starts with ticked, signed out or before an account saves its own.
+  "decimals", "token_address"}], "default_accepted_assets": ["POL", "USDC", "USDT"], "default_invoice_lifetime_seconds":
+  1800, "default_accuracy_percent": "1"}]}`; `default_accepted_assets` are the coins a new invoice starts with ticked,
+  signed out or before an account saves its own; the two other defaults are what an invoice on the chain takes when
+  neither its maker nor its account set one (2026-10-22).
 - Passkeys: both options routes return WebAuthn's JSON forms (`PublicKeyCredentialCreationOptionsJSON`,
   `PublicKeyCredentialRequestOptionsJSON`; base64url for bytes) for `PublicKeyCredential.parseCreationOptionsFromJSON` /
   `parseRequestOptionsFromJSON`. `POST /accounts/registration-options` takes `{"username": "alice", "payout_address":
@@ -907,7 +929,9 @@ Times are ISO 8601 UTC strings; asset and fiat amounts are decimal strings. `GET
   `account_session_expired`, `unauthorized` (401), `origin_mismatch` (403), `account_passkey_not_found` (404),
   `passkey_already_registered`, `username_taken`, `last_passkey` (409), `passkey_not_for_this_account` (403, the payout
   address change signed by another account's passkey). The session view also carries `support_contact` (string or
-  null); a passkey also `used_by_current_session` (2026-10-11).
+  null); a passkey also `used_by_current_session` (2026-10-11); and `confirmations_final_by_chain`,
+  `invoice_lifetime_seconds_by_chain` and `accuracy_percent_by_chain` (2026-10-22): the account's saved values per
+  enabled chain, a chain left out standing at its default (`GET /chains`), so a settings field can show "Default".
 - The public view carries `seller_support_contact`: `{"kind": "email" | "telegram" | "url", "display_text",
   "href"}` (`mailto:...`, `https://t.me/name` or the https link) when the invoice's account set one, else null; never
   the username (2026-10-11).
@@ -1229,14 +1253,15 @@ header; the cookie rides along.
   "+ Add a note" once the address is valid, which shows the note field focused, and signed in "Options" on the same
   line, naming the changed ones ("Options: EUR, 15 min"): a sheet with the currency (money or a coin; the big amount
   then reads "€" or the coin's symbol, and a coin amount is paid in that coin only), the chain when more than one is
-  enabled, "How many payers", time to pay (presets and minutes), the back-to-shop link, top-ups open until, accepted
-  shortfall %, order id, metadata JSON and the contract-wallet tick; a hint only where the value doesn't explain itself;
+  enabled, "How many payers", time to pay (presets and minutes) and accepted shortfall % (both empty, "Chain default", by
+  default: nothing is sent and each network takes the account's setting, 2026-10-22), the back-to-shop link, top-ups
+  open until, order id, metadata JSON and the contract-wallet tick; a hint only where the value doesn't explain itself;
   a wrong one shows under its field and "Create link" opens the sheet at it. `/new`, the old account form, redirects to
   `/?options=1`, which opens that sheet signed in. "Create link" (pinned at the bottom) posts `POST /public/invoices`
   signed out (with `assets` when the ticks differ from every coin), `POST /invoices` signed in, or with more than one
   payer `POST /payment-links` ("Create link for N"; USD or EUR, no order id, metadata or top-up deadline), or with
-  Options' "Repeat" (Never, Daily, Weekly, Monthly; one payer, no top-up deadline, the order id a prefix, the time to
-  pay moved to 12 h while untouched) `POST /invoice-schedules` ("Create monthly invoice") and then `/activity#schedules`
+  Options' "Repeat" (Never, Daily, Weekly, Monthly; one payer, no top-up deadline, the order id a prefix; an empty time to pay is the
+  chain's default, else 12 h) `POST /invoice-schedules` ("Create monthly invoice") and then `/activity#schedules`
   (2026-10-21, section 18); otherwise it goes to
   the invoice's (or the link's `/l/{id}`) own page, so the address bar is the link, under a share overlay (a Drawer on a phone, a Dialog on a wide screen):
   the link's QR and the link on one line, tap to copy, "Share link" through the Web Share API or a copy, "Make
@@ -1313,17 +1338,21 @@ header; the cookie rides along.
   (`GET /events`). For each new event a toast (at the bottom on phones) plus a browser notification (Notification API,
   asked on the bell, https://developer.mozilla.org/en-US/docs/Web/API/Notification) while the tab is open (section 8.1;
   2026-10-11). Making an invoice is the tab bar's "New", not a button here.
-- `/settings`, behind the passkey sign-in: a plain "Settings" heading and rows, each showing its value and opening its
-  own sheet (a Drawer on a phone, a Dialog on a wide screen; 2026-10-14), no section blurbs. "Payout" (the short
-  address; the sheet shows it whole, tap to copy, then the new address and "Confirm with passkey", saying that links
-  already made keep the old one), "Monero wallet" (only while a Monero chain is enabled, read from `GET
-  /account-monero-wallet`'s `monero_chains`; the short address or "Off"; the sheet shows the address short, tap to
-  copy, the lookahead line with "I set it" until confirmed, and "Set"/"Change": the primary address, the secret view
-  key in a password field kept only in the form, a network picker when more than one Monero chain is enabled, the
-  three receiver notes of section 14 and "Confirm with passkey"; 2026-10-14), "Coins" (the picker; its "Save" sends only `accepted_assets_by_chain` to
-  `PATCH /accounts/current`), "Support contact" (the contact or "Off"; its "Save" sends only `support_contact`, empty
-  turns it off) and "Passkeys" (the count; the list with the one this session signed in with marked, rename, add,
-  delete after a confirm; the last one cannot go) (2026-10-11). Then "Connect": "Discord" (the webhook's id, "Off" or
+- `/settings`, behind the passkey sign-in: a plain "Settings" heading and rows, each showing a short value and opening
+  its own sheet (a Drawer on a phone, a Dialog on a wide screen; 2026-10-14), no section blurbs, grouped under short
+  muted headings by what the account is doing (2026-10-22). "Getting paid": "Payout" (the short address; the sheet
+  shows it whole, tap to copy, then the new address and "Confirm with passkey", saying that links already made keep the
+  old one) and "Coins" (the first three coins and "+N"; the sheet has one section per network that takes invoices: its
+  coin picker, then its invoice defaults, "Time to pay, min" and "Shortfall, %", each empty for the default `GET
+  /chains` names; an EVM network says in one muted line that a payment counts once its block is finalized, with no
+  count to set (section 4); a Monero network shows its "Wallet" row (the short address or "Off", opening the wallet
+  sheet on top: the address short, tap to copy, the lookahead line with "I set it" until confirmed, and "Set"/"Change":
+  the primary address, the secret view key in a masked field kept only in the form, the three receiver notes of section
+  14 and "Confirm with passkey"; 2026-10-14) and, once it takes XMR, its "Confirmations" (1-100, empty for the chain's
+  default); one "Save" sends only what changed in one `PATCH /accounts/current`; 2026-10-22). "Payer page": "Support
+  contact" (the contact or "Off"; its "Save" sends only `support_contact`, empty turns it off). "Security": "Passkeys"
+  (the count; the list with the one this session signed in with marked, rename, add, delete after a confirm; the last
+  one cannot go) (2026-10-11). "Connect": "Discord" (the webhook's id, "Off" or
   "Gone in Discord"; the sheet shows the id and its thread's when the URL named one, "Set"/"Change" behind the passkey
   with the URL pasted from Discord's "Copy Webhook URL" and never shown back, "Send test message", the last message's
   status, "Remove" after a confirm, and an alert once Discord deleted it; 2026-10-13, section 8.4), "Webhook" (the
@@ -1332,9 +1361,13 @@ header; the cookie rides along.
   invoice event type; 2026-10-21) with "Send test", and the last 20 deliveries with status and
   "Resend"; an alert once the receiver answered 410 Gone, with test and resend off until the URL is set again) and
   "API tokens" (the count; the sheet lists name, made and last used, revoke after a confirm, and "Make an API token"
-  asks a name and the passkey and shows the token once) (2026-10-12, section 8.3). Then "Records": "Invoice export"
+  asks a name and the passkey and shows the token once; under Connect, beside the webhook its server uses, not under
+  Security, though making one needs the passkey) (2026-10-12, section 8.3). "Records": "Invoice export"
   ("CSV"; the sheet takes an optional from and to date, whole UTC days, and "Download CSV" is a plain link to `GET
-  /invoices/export.csv`, so the browser streams it to a file; 2026-10-21). Each sheet acts at once.
+  /invoices/export.csv`, so the browser streams it to a file; 2026-10-21). Each sheet acts at once. No sheet is wider
+  than the screen (2026-10-22): the Dialog's grid column is `minmax(0, 1fr)`, the Drawer's scroll area `min-w-0`, and
+  a date field keeps its border and padding on a wrapper, since iOS WebKit sizes a padded date input wider than its
+  column (https://bugs.webkit.org/show_bug.cgi?id=301648).
 
 ## 11. Layout
 
@@ -1473,7 +1506,11 @@ their invoices get refunds),
   overpay refunded by itself with nothing to sign, and after an
   underpaid invoice's window asks for the money back by signing on the page; the account makes a quantity-2 link on
   /, two payers each pick a coin and pay, a third sees "Sold out", two slot requests at once for a quantity-1 link
-  get exactly one invoice, and the account closes that link from /activity. Last, the watcher is stopped
+  get exactly one invoice, and the account closes that link from /activity. On a 375 px phone screen (Chromium: Playwright's
+  WebKit sends no Secure cookie to http://localhost, so it cannot sign in there), /settings shows its groups in order and every row's sheet fits; the Coins
+  sheet saves a payment window and a shortfall for the fork's network, and an invoice made on / with empty Options, an
+  API invoice without terms and a link's payer invoice take them, while explicit terms stay their own. Every sheet the
+  flow opens is checked to fit the screen: nothing past its edges, nothing scrolling sideways. Last, the watcher is stopped
   and the API records one `watcher_not_ticking` operator alert, then the watcher starts again. It checks what the pages show (the QR
   decoded with OpenCV), the API, balances and events, and screenshots each step to the scratch folder.
 - `e2e/run_live_flow.sh` runs `e2e/polygon_live_flow.py` on live Polygon mainnet against production, by hand: it
@@ -1725,7 +1762,8 @@ out (a sweep there costs more than a 1 to 5 USD invoice earns).
   row on an account's mixed invoice is possible after version 1, since the subaddress is allocated at the tap too.
 - Verification: the fork e2e against an anvil fork of Arbitrum One (the same scenarios, gas figures indicative),
   a review of settlements on a no-mempool chain, then one live mainnet run paid from the Arbitrum float.
-  `e2e/mixed_network_flow.py` checks both independent VMs and the shared invoice and quantity-link flows.
+  `e2e/mixed_network_flow.py` checks both independent VMs and the shared invoice and quantity-link flows, and that a
+  two-network invoice waits with the longer saved window and takes the picked network's window and shortfall.
   `e2e/arbitrum_sequencer_flow.py` checks outages and recovery against a healthy fallback.
   `e2e/run_arbitrum_live_flow.sh` pays ETH, USDT0 and USDC on production, verifies sweeps and the excess refund,
   and returns the payer's leftovers to the float. Its overpaid invoice is made with the same operator account token
@@ -1936,8 +1974,9 @@ authorisations, nothing that moves money the payer did not send; the gateway sta
 - Each invoice is made through the normal creation (channel `schedule`: no IP, capped per account like an API token's,
   `PAY_MAXIMUM_OPEN_INVOICES_PER_ACCOUNT`), so it sends the usual events, and records `schedule.invoice_created` with
   the invoice as its data in the same transaction; the webhook, the invoice's `callback_url`, a token's `GET /events`
-  and Discord get it (it has an `invoice_id`, section 8.3). Default lifetime 12 h, the longest (section 4): the link
-  reaches the payer later, through the account's server.
+  and Discord get it (it has an `invoice_id`, section 8.3). Without `lifetime_seconds` each invoice takes the account's
+  window for its chain, else 12 h, the longest (section 4): the link reaches the payer later, through the account's
+  server.
 - A refusal (prices down, a factory missing) rolls the period's work back, notes `last_failure_code` and
   `last_failure_at` on the schedule and retries after 60 s, 2, 5, 15, 30 then every 60 minutes. No account event:
   the schedule's view shows it.

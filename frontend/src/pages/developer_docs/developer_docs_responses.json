@@ -38,7 +38,7 @@
           "decimals": 18,
           "token_address": null
         },
-        "amount": "52.8238"
+        "amount": "53.6395"
       },
       {
         "chain": {
@@ -239,7 +239,7 @@
             "tx_hash": "0x0101010101010101010101010101010101010101010101010101010101010101",
             "sender": "0x0404040404040404040404040404040404040404",
             "amount": "5",
-            "block_number": 95951791,
+            "block_number": 95954602,
             "final": true
           }
         ],
@@ -263,7 +263,7 @@
         "confirmations_final": null,
         "seller_support_contact": null,
         "created_at": "2026-10-23T11:59:07Z",
-        "updated_at": "2026-10-23T11:59:16Z",
+        "updated_at": "2026-10-23T11:59:17Z",
         "destination_address": "0x0101010101010101010101010101010101010101",
         "order_id": "customer-77:order-1042",
         "metadata": {
@@ -273,7 +273,7 @@
         "payment_link_id": null,
         "invoice_schedule_id": null,
         "invoice_schedule_period_start": null,
-        "paid_at": "2026-10-23T11:59:11Z",
+        "paid_at": "2026-10-23T11:59:12Z",
         "callback_url": null,
         "refreshed_from_invoice_id": null,
         "refreshed_into_invoice_id": null,
@@ -335,7 +335,7 @@
             "tx_hash": "0x0101010101010101010101010101010101010101010101010101010101010101",
             "sender": "0x0404040404040404040404040404040404040404",
             "amount": "5",
-            "block_number": 95951791,
+            "block_number": 95954602,
             "final": true
           }
         ],
@@ -359,7 +359,7 @@
         "confirmations_final": null,
         "seller_support_contact": null,
         "created_at": "2026-10-23T11:59:07Z",
-        "updated_at": "2026-10-23T11:59:16Z",
+        "updated_at": "2026-10-23T11:59:17Z",
         "destination_address": "0x0101010101010101010101010101010101010101",
         "order_id": "customer-77:order-1042",
         "metadata": {
@@ -369,7 +369,7 @@
         "payment_link_id": null,
         "invoice_schedule_id": null,
         "invoice_schedule_period_start": null,
-        "paid_at": "2026-10-23T11:59:11Z",
+        "paid_at": "2026-10-23T11:59:12Z",
         "callback_url": null,
         "refreshed_from_invoice_id": null,
         "refreshed_into_invoice_id": null,
@@ -454,7 +454,9 @@
           "POL",
           "USDC",
           "USDT"
-        ]
+        ],
+        "default_invoice_lifetime_seconds": 1800,
+        "default_accuracy_percent": "1"
       }
     ]
   },
@@ -565,7 +567,7 @@
           "decimals": 18,
           "token_address": null
         },
-        "amount": "52.8238"
+        "amount": "53.6395"
       },
       {
         "chain": {
@@ -618,7 +620,7 @@
     "note": "",
     "return_url": null,
     "success_url": null,
-    "expires_at": "2026-10-23T12:30:32Z",
+    "expires_at": "2026-10-23T12:30:34Z",
     "underpaid_open_until": null,
     "payment_uri": null,
     "payments": [],
@@ -634,8 +636,8 @@
     "confirmations": null,
     "confirmations_final": null,
     "seller_support_contact": null,
-    "created_at": "2026-10-23T12:00:31Z",
-    "updated_at": "2026-10-23T12:00:31Z",
+    "created_at": "2026-10-23T12:00:32Z",
+    "updated_at": "2026-10-23T12:00:32Z",
     "destination_address": "0x0101010101010101010101010101010101010101",
     "order_id": "order-1042",
     "metadata": null,
@@ -688,7 +690,7 @@
           "decimals": 18,
           "token_address": null
         },
-        "amount": "52.8238"
+        "amount": "53.6395"
       },
       {
         "chain": {
@@ -741,7 +743,7 @@
     "note": "",
     "return_url": "https://shop.example/cart",
     "success_url": "https://shop.example/thanks",
-    "expires_at": "2026-10-23T12:30:32Z",
+    "expires_at": "2026-10-23T12:30:34Z",
     "underpaid_open_until": null,
     "payment_uri": null,
     "payments": [],
@@ -757,8 +759,8 @@
     "confirmations": null,
     "confirmations_final": null,
     "seller_support_contact": null,
-    "created_at": "2026-10-23T12:00:32Z",
-    "updated_at": "2026-10-23T12:00:32Z",
+    "created_at": "2026-10-23T12:00:34Z",
+    "updated_at": "2026-10-23T12:00:34Z",
     "destination_address": "0x0101010101010101010101010101010101010101",
     "order_id": "order-1043",
     "metadata": null,
@@ -979,7 +981,7 @@
           "decimals": 18,
           "token_address": null
         },
-        "amount": "52.8238"
+        "amount": "53.6395"
       }
     ],
     "fiat": {
@@ -989,10 +991,10 @@
       "eur": "4.45"
     },
     "note": "",
-    "created_at": "2026-10-23T12:00:32Z",
+    "created_at": "2026-10-23T12:00:34Z",
     "destination_address": "0x0101010101010101010101010101010101010101",
-    "lifetime_seconds": 1800,
-    "accuracy_percent": "1",
+    "lifetime_seconds": null,
+    "accuracy_percent": null,
     "return_url": null,
     "slots_held": 0,
     "paid_count": 0,
@@ -1052,7 +1054,7 @@
           "decimals": 18,
           "token_address": null
         },
-        "amount": "52.8238"
+        "amount": "53.6395"
       }
     ],
     "fiat": {
@@ -1062,14 +1064,14 @@
       "eur": "4.45"
     },
     "note": "",
-    "created_at": "2026-10-23T12:00:32Z",
+    "created_at": "2026-10-23T12:00:34Z",
     "destination_address": "0x0101010101010101010101010101010101010101",
-    "lifetime_seconds": 1800,
-    "accuracy_percent": "1",
+    "lifetime_seconds": null,
+    "accuracy_percent": null,
     "return_url": null,
     "slots_held": 0,
     "paid_count": 0,
-    "closed_at": "2026-10-23T12:00:32Z"
+    "closed_at": "2026-10-23T12:00:34Z"
   },
   "create_static_deposit_address": {
     "id": "sda_DEFGHJKLMNPQRSTUVWXYZa",
@@ -1092,7 +1094,7 @@
     "received_usd": "0.00",
     "payment_count": 0,
     "last_payment_at": null,
-    "created_at": "2026-10-23T12:00:32Z",
+    "created_at": "2026-10-23T12:00:34Z",
     "payments": []
   },
   "read_static_deposit_address": {
@@ -1115,8 +1117,8 @@
     "sweep_blocked": false,
     "received_usd": "5.00",
     "payment_count": 1,
-    "last_payment_at": "2026-10-23T12:00:50Z",
-    "created_at": "2026-10-23T12:00:32Z",
+    "last_payment_at": "2026-10-23T12:01:09Z",
+    "created_at": "2026-10-23T12:00:34Z",
     "payments": [
       {
         "id": 1,
@@ -1128,8 +1130,8 @@
         "uncredited_reason": null,
         "tx_hash": "0x0303030303030303030303030303030303030303030303030303030303030303",
         "sender": "0x0404040404040404040404040404040404040404",
-        "block_number": 95951875,
-        "created_at": "2026-10-23T12:00:50Z"
+        "block_number": 95954688,
+        "created_at": "2026-10-23T12:01:09Z"
       }
     ]
   },
@@ -1155,8 +1157,8 @@
         "sweep_blocked": false,
         "received_usd": "5.00",
         "payment_count": 1,
-        "last_payment_at": "2026-10-23T12:00:50Z",
-        "created_at": "2026-10-23T12:00:32Z",
+        "last_payment_at": "2026-10-23T12:01:09Z",
+        "created_at": "2026-10-23T12:00:34Z",
         "payments": []
       }
     ],
@@ -1213,7 +1215,7 @@
         "tx_hash": "0x0101010101010101010101010101010101010101010101010101010101010101",
         "sender": "0x0404040404040404040404040404040404040404",
         "amount": "5",
-        "block_number": 95951791,
+        "block_number": 95954602,
         "final": true
       }
     ],
@@ -1247,7 +1249,7 @@
     "payment_link_id": null,
     "invoice_schedule_id": null,
     "invoice_schedule_period_start": null,
-    "paid_at": "2026-10-23T11:59:11Z",
+    "paid_at": "2026-10-23T11:59:12Z",
     "callback_url": null,
     "refreshed_from_invoice_id": null,
     "refreshed_into_invoice_id": null,
@@ -1258,81 +1260,81 @@
       {
         "chain": "polygon",
         "asset": "POL",
-        "usd": "0.09465433",
-        "eur": "0.08428628"
+        "usd": "0.093215",
+        "eur": "0.08294847"
       },
       {
         "chain": "polygon",
         "asset": "USDC",
         "usd": "1",
-        "eur": "0.89046402"
+        "eur": "0.8898618"
       },
       {
         "chain": "polygon",
         "asset": "USDT",
         "usd": "1",
-        "eur": "0.89046402"
+        "eur": "0.8898618"
       },
       {
         "chain": "polygon",
         "asset": "USDC.e",
         "usd": "1",
-        "eur": "0.89046402"
+        "eur": "0.8898618"
       },
       {
         "chain": "polygon",
         "asset": "WETH",
-        "usd": "2466.7047",
-        "eur": "2196.51178529"
+        "usd": "2437.6148",
+        "eur": "2169.14030451"
       },
       {
         "chain": "polygon",
         "asset": "WBTC",
-        "usd": "83919.41839495",
-        "eur": "74727.22272727"
+        "usd": "82846.21585855",
+        "eur": "73721.68313672"
       },
       {
         "chain": "polygon",
         "asset": "DAI",
         "usd": "1",
-        "eur": "0.89046402"
+        "eur": "0.8898618"
       },
       {
         "chain": "polygon",
         "asset": "LINK",
-        "usd": "12.522989",
-        "eur": "11.15127114"
+        "usd": "12.312009",
+        "eur": "10.95598655"
       },
       {
         "chain": "polygon",
         "asset": "AAVE",
-        "usd": "154.72649499",
-        "eur": "137.77837685"
+        "usd": "150.24160939",
+        "eur": "133.69426964"
       },
       {
         "chain": "polygon",
         "asset": "UNI",
-        "usd": "7.50473304",
-        "eur": "6.68269476"
+        "usd": "7.27766751",
+        "eur": "6.47611834"
       }
     ]
   },
-  "invoice_export_csv": "row_kind,occurred_at,invoice_id,invoice_created_at,order_id,invoice_status,partial,late_payment,note,fiat_currency,fiat_amount,chain,asset,amount_due,amount_received,destination_address,deposit_address,paid_at,payment_link_id,row_status,row_asset,row_amount,asset_price_usd,transaction_hash,block_number,from_address,to_address\r\ninvoice,2026-10-23T11:59:07Z,inv_FGHJKLMNPQRSTUVWXYZabc,2026-10-23T11:59:07Z,customer-77:order-1042,paid,false,false,\"Premium plan, 1 month\",USD,5.00,polygon,USDC,5,5,0x0101010101010101010101010101010101010101,0x0303030303030303030303030303030303030303,2026-10-23T11:59:11Z,,,,,,,,,\r\npayment,2026-10-23T11:58:36Z,inv_FGHJKLMNPQRSTUVWXYZabc,2026-10-23T11:59:07Z,customer-77:order-1042,paid,false,false,\"Premium plan, 1 month\",USD,5.00,polygon,USDC,5,5,0x0101010101010101010101010101010101010101,0x0303030303030303030303030303030303030303,2026-10-23T11:59:11Z,,final,USDC,5,,0x0101010101010101010101010101010101010101010101010101010101010101,95951791,0x0404040404040404040404040404040404040404,0x0303030303030303030303030303030303030303\r\nsweep,2026-10-23T11:59:15Z,inv_FGHJKLMNPQRSTUVWXYZabc,2026-10-23T11:59:07Z,customer-77:order-1042,paid,false,false,\"Premium plan, 1 month\",USD,5.00,polygon,USDC,5,5,0x0101010101010101010101010101010101010101,0x0303030303030303030303030303030303030303,2026-10-23T11:59:11Z,,final,USDC,5,,0x0202020202020202020202020202020202020202020202020202020202020202,95951794,0x0303030303030303030303030303030303030303,0x0101010101010101010101010101010101010101\r\n",
+  "invoice_export_csv": "row_kind,occurred_at,invoice_id,invoice_created_at,order_id,invoice_status,partial,late_payment,note,fiat_currency,fiat_amount,chain,asset,amount_due,amount_received,destination_address,deposit_address,paid_at,payment_link_id,row_status,row_asset,row_amount,asset_price_usd,transaction_hash,block_number,from_address,to_address\r\ninvoice,2026-10-23T11:59:07Z,inv_FGHJKLMNPQRSTUVWXYZabc,2026-10-23T11:59:07Z,customer-77:order-1042,paid,false,false,\"Premium plan, 1 month\",USD,5.00,polygon,USDC,5,5,0x0101010101010101010101010101010101010101,0x0303030303030303030303030303030303030303,2026-10-23T11:59:12Z,,,,,,,,,\r\npayment,2026-10-23T11:57:54Z,inv_FGHJKLMNPQRSTUVWXYZabc,2026-10-23T11:59:07Z,customer-77:order-1042,paid,false,false,\"Premium plan, 1 month\",USD,5.00,polygon,USDC,5,5,0x0101010101010101010101010101010101010101,0x0303030303030303030303030303030303030303,2026-10-23T11:59:12Z,,final,USDC,5,,0x0101010101010101010101010101010101010101010101010101010101010101,95954602,0x0404040404040404040404040404040404040404,0x0303030303030303030303030303030303030303\r\nsweep,2026-10-23T11:59:15Z,inv_FGHJKLMNPQRSTUVWXYZabc,2026-10-23T11:59:07Z,customer-77:order-1042,paid,false,false,\"Premium plan, 1 month\",USD,5.00,polygon,USDC,5,5,0x0101010101010101010101010101010101010101,0x0303030303030303030303030303030303030303,2026-10-23T11:59:12Z,,final,USDC,5,,0x0202020202020202020202020202020202020202020202020202020202020202,95954606,0x0303030303030303030303030303030303030303,0x0101010101010101010101010101010101010101\r\n",
   "test_webhook_event": {
     "id": "whd_LMNPQRSTUVWXYZabcdefgh",
     "webhook_id": "test_TUVWXYZabcdefghijkmnop",
     "event_type": "webhook.test",
     "status": "pending",
     "attempt_count": 0,
-    "next_attempt_at": "2026-10-23T11:59:15Z",
+    "next_attempt_at": "2026-10-23T11:59:16Z",
     "last_response_status": null,
     "last_failure_reason": null,
-    "created_at": "2026-10-23T11:59:15Z"
+    "created_at": "2026-10-23T11:59:16Z"
   },
   "webhook_events": {
     "webhook.test": {
       "type": "webhook.test",
-      "timestamp": "2026-10-23T11:59:15Z",
+      "timestamp": "2026-10-23T11:59:16Z",
       "data": {
         "message": "A test event from pay-7331."
       },
@@ -1340,7 +1342,7 @@
     },
     "invoice.payment_detected": {
       "type": "invoice.payment_detected",
-      "timestamp": "2026-10-23T11:59:15Z",
+      "timestamp": "2026-10-23T11:59:16Z",
       "data": {
         "id": "inv_TestSampLe7e57SampLe7e",
         "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
@@ -1379,12 +1381,12 @@
         },
         "quote": {
           "asset_price_usd": "1",
-          "expires_at": "2026-10-23T12:17:15Z"
+          "expires_at": "2026-10-23T12:17:16Z"
         },
         "note": "Test event: nothing was paid",
         "return_url": null,
         "success_url": null,
-        "expires_at": "2026-10-23T12:17:15Z",
+        "expires_at": "2026-10-23T12:17:16Z",
         "underpaid_open_until": null,
         "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=5000000",
         "payments": [
@@ -1408,8 +1410,8 @@
         "confirmations": null,
         "confirmations_final": null,
         "seller_support_contact": null,
-        "created_at": "2026-10-23T11:47:15Z",
-        "updated_at": "2026-10-23T11:59:15Z",
+        "created_at": "2026-10-23T11:47:16Z",
+        "updated_at": "2026-10-23T11:59:16Z",
         "destination_address": "0x0101010101010101010101010101010101010101",
         "order_id": "test-order-1042",
         "metadata": {
@@ -1430,7 +1432,7 @@
     },
     "invoice.underpaid": {
       "type": "invoice.underpaid",
-      "timestamp": "2026-10-23T11:59:15Z",
+      "timestamp": "2026-10-23T11:59:16Z",
       "data": {
         "id": "inv_TestSampLe7e57SampLe7e",
         "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
@@ -1469,12 +1471,12 @@
         },
         "quote": {
           "asset_price_usd": "1",
-          "expires_at": "2026-10-23T12:17:15Z"
+          "expires_at": "2026-10-23T12:17:16Z"
         },
         "note": "Test event: nothing was paid",
         "return_url": null,
         "success_url": null,
-        "expires_at": "2026-10-23T12:17:15Z",
+        "expires_at": "2026-10-23T12:17:16Z",
         "underpaid_open_until": null,
         "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=2500000",
         "payments": [
@@ -1498,8 +1500,8 @@
         "confirmations": null,
         "confirmations_final": null,
         "seller_support_contact": null,
-        "created_at": "2026-10-23T11:47:15Z",
-        "updated_at": "2026-10-23T11:59:15Z",
+        "created_at": "2026-10-23T11:47:16Z",
+        "updated_at": "2026-10-23T11:59:16Z",
         "destination_address": "0x0101010101010101010101010101010101010101",
         "order_id": "test-order-1042",
         "metadata": {
@@ -1520,7 +1522,7 @@
     },
     "invoice.paid": {
       "type": "invoice.paid",
-      "timestamp": "2026-10-23T11:59:15Z",
+      "timestamp": "2026-10-23T11:59:16Z",
       "data": {
         "id": "inv_TestSampLe7e57SampLe7e",
         "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
@@ -1559,12 +1561,12 @@
         },
         "quote": {
           "asset_price_usd": "1",
-          "expires_at": "2026-10-23T12:17:15Z"
+          "expires_at": "2026-10-23T12:17:16Z"
         },
         "note": "Test event: nothing was paid",
         "return_url": null,
         "success_url": null,
-        "expires_at": "2026-10-23T12:17:15Z",
+        "expires_at": "2026-10-23T12:17:16Z",
         "underpaid_open_until": null,
         "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=0",
         "payments": [
@@ -1588,8 +1590,8 @@
         "confirmations": null,
         "confirmations_final": null,
         "seller_support_contact": null,
-        "created_at": "2026-10-23T11:47:15Z",
-        "updated_at": "2026-10-23T11:59:15Z",
+        "created_at": "2026-10-23T11:47:16Z",
+        "updated_at": "2026-10-23T11:59:16Z",
         "destination_address": "0x0101010101010101010101010101010101010101",
         "order_id": "test-order-1042",
         "metadata": {
@@ -1600,7 +1602,7 @@
         "payment_link_id": null,
         "invoice_schedule_id": null,
         "invoice_schedule_period_start": null,
-        "paid_at": "2026-10-23T11:57:15Z",
+        "paid_at": "2026-10-23T11:57:16Z",
         "callback_url": null,
         "refreshed_from_invoice_id": null,
         "refreshed_into_invoice_id": null,
@@ -1610,7 +1612,7 @@
     },
     "invoice.overpaid": {
       "type": "invoice.overpaid",
-      "timestamp": "2026-10-23T11:59:15Z",
+      "timestamp": "2026-10-23T11:59:16Z",
       "data": {
         "id": "inv_TestSampLe7e57SampLe7e",
         "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
@@ -1649,12 +1651,12 @@
         },
         "quote": {
           "asset_price_usd": "1",
-          "expires_at": "2026-10-23T12:17:15Z"
+          "expires_at": "2026-10-23T12:17:16Z"
         },
         "note": "Test event: nothing was paid",
         "return_url": null,
         "success_url": null,
-        "expires_at": "2026-10-23T12:17:15Z",
+        "expires_at": "2026-10-23T12:17:16Z",
         "underpaid_open_until": null,
         "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=0",
         "payments": [
@@ -1678,8 +1680,8 @@
         "confirmations": null,
         "confirmations_final": null,
         "seller_support_contact": null,
-        "created_at": "2026-10-23T11:47:15Z",
-        "updated_at": "2026-10-23T11:59:15Z",
+        "created_at": "2026-10-23T11:47:16Z",
+        "updated_at": "2026-10-23T11:59:16Z",
         "destination_address": "0x0101010101010101010101010101010101010101",
         "order_id": "test-order-1042",
         "metadata": {
@@ -1690,7 +1692,7 @@
         "payment_link_id": null,
         "invoice_schedule_id": null,
         "invoice_schedule_period_start": null,
-        "paid_at": "2026-10-23T11:57:15Z",
+        "paid_at": "2026-10-23T11:57:16Z",
         "callback_url": null,
         "refreshed_from_invoice_id": null,
         "refreshed_into_invoice_id": null,
@@ -1700,7 +1702,7 @@
     },
     "invoice.expired": {
       "type": "invoice.expired",
-      "timestamp": "2026-10-23T11:59:17Z",
+      "timestamp": "2026-10-23T11:59:18Z",
       "data": {
         "id": "inv_TestSampLe7e57SampLe7e",
         "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
@@ -1739,12 +1741,12 @@
         },
         "quote": {
           "asset_price_usd": "1",
-          "expires_at": "2026-10-23T12:17:17Z"
+          "expires_at": "2026-10-23T12:17:18Z"
         },
         "note": "Test event: nothing was paid",
         "return_url": null,
         "success_url": null,
-        "expires_at": "2026-10-23T12:17:17Z",
+        "expires_at": "2026-10-23T12:17:18Z",
         "underpaid_open_until": null,
         "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=5000000",
         "payments": [],
@@ -1760,8 +1762,8 @@
         "confirmations": null,
         "confirmations_final": null,
         "seller_support_contact": null,
-        "created_at": "2026-10-23T11:47:17Z",
-        "updated_at": "2026-10-23T11:59:17Z",
+        "created_at": "2026-10-23T11:47:18Z",
+        "updated_at": "2026-10-23T11:59:18Z",
         "destination_address": "0x0101010101010101010101010101010101010101",
         "order_id": "test-order-1042",
         "metadata": {
@@ -2483,10 +2485,10 @@
     "id": "sch_89ABCDEFGHJKLMNPQRSTUV",
     "status": "active",
     "interval": "monthly",
-    "starts_at": "2026-10-22T12:02:15Z",
+    "starts_at": "2026-10-22T12:02:17Z",
     "ends_after_invoice_count": 12,
     "ends_at": null,
-    "next_period_start": "2026-10-22T12:02:15Z",
+    "next_period_start": "2026-10-22T12:02:17Z",
     "created_invoice_count": 0,
     "last_invoice_created_at": null,
     "last_failure_code": null,
@@ -2504,26 +2506,26 @@
     "note": "",
     "metadata": null,
     "order_id_prefix": "customer-77-premium",
-    "lifetime_seconds": 43200,
-    "accuracy_percent": "1",
+    "lifetime_seconds": null,
+    "accuracy_percent": null,
     "return_url": null,
     "success_url": null,
     "callback_url": null,
     "paused_at": null,
     "ended_at": null,
-    "created_at": "2026-10-22T12:02:15Z",
-    "updated_at": "2026-10-22T12:02:15Z"
+    "created_at": "2026-10-22T12:02:17Z",
+    "updated_at": "2026-10-22T12:02:17Z"
   },
   "read_invoice_schedule": {
     "id": "sch_89ABCDEFGHJKLMNPQRSTUV",
     "status": "active",
     "interval": "monthly",
-    "starts_at": "2026-10-22T12:02:15Z",
+    "starts_at": "2026-10-22T12:02:17Z",
     "ends_after_invoice_count": 12,
     "ends_at": null,
-    "next_period_start": "2026-11-22T12:02:15Z",
+    "next_period_start": "2026-11-22T12:02:17Z",
     "created_invoice_count": 1,
-    "last_invoice_created_at": "2026-10-22T12:02:19Z",
+    "last_invoice_created_at": "2026-10-22T12:02:21Z",
     "last_failure_code": null,
     "last_failure_at": null,
     "amount": "5",
@@ -2539,15 +2541,15 @@
     "note": "",
     "metadata": null,
     "order_id_prefix": "customer-77-premium",
-    "lifetime_seconds": 43200,
-    "accuracy_percent": "1",
+    "lifetime_seconds": null,
+    "accuracy_percent": null,
     "return_url": null,
     "success_url": null,
     "callback_url": null,
     "paused_at": null,
     "ended_at": null,
-    "created_at": "2026-10-22T12:02:15Z",
-    "updated_at": "2026-10-22T12:02:19Z"
+    "created_at": "2026-10-22T12:02:17Z",
+    "updated_at": "2026-10-22T12:02:21Z"
   },
   "list_invoice_schedule_invoices": {
     "invoices": [
@@ -2589,12 +2591,12 @@
         },
         "quote": {
           "asset_price_usd": "1",
-          "expires_at": "2026-10-23T00:02:19Z"
+          "expires_at": "2026-10-23T00:02:21Z"
         },
         "note": "",
         "return_url": null,
         "success_url": null,
-        "expires_at": "2026-10-23T00:02:19Z",
+        "expires_at": "2026-10-23T00:02:21Z",
         "underpaid_open_until": null,
         "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0202020202020202020202020202020202020202&uint256=5000000",
         "payments": [],
@@ -2610,15 +2612,15 @@
         "confirmations": null,
         "confirmations_final": null,
         "seller_support_contact": null,
-        "created_at": "2026-10-22T12:02:19Z",
-        "updated_at": "2026-10-22T12:02:19Z",
+        "created_at": "2026-10-22T12:02:21Z",
+        "updated_at": "2026-10-22T12:02:21Z",
         "destination_address": "0x0101010101010101010101010101010101010101",
         "order_id": "customer-77-premium-20261020",
         "metadata": null,
         "accuracy_percent": "1",
         "payment_link_id": null,
         "invoice_schedule_id": "sch_89ABCDEFGHJKLMNPQRSTUV",
-        "invoice_schedule_period_start": "2026-10-22T12:02:15Z",
+        "invoice_schedule_period_start": "2026-10-22T12:02:17Z",
         "paid_at": null,
         "callback_url": null,
         "refreshed_from_invoice_id": null,
@@ -2636,7 +2638,7 @@
     "ends_at": null,
     "next_period_start": null,
     "created_invoice_count": 2,
-    "last_invoice_created_at": "2026-10-22T12:01:04Z",
+    "last_invoice_created_at": "2026-10-22T12:01:06Z",
     "last_failure_code": null,
     "last_failure_at": null,
     "amount": "5",
@@ -2654,15 +2656,15 @@
       "customer_id": 77
     },
     "order_id_prefix": "plan-77",
-    "lifetime_seconds": 43200,
-    "accuracy_percent": "1",
+    "lifetime_seconds": null,
+    "accuracy_percent": null,
     "return_url": null,
     "success_url": null,
     "callback_url": null,
-    "paused_at": "2026-10-22T12:01:05Z",
+    "paused_at": "2026-10-22T12:01:06Z",
     "ended_at": null,
     "created_at": "2026-10-22T12:00:00Z",
-    "updated_at": "2026-10-22T12:01:05Z"
+    "updated_at": "2026-10-22T12:01:06Z"
   },
   "resume_invoice_schedule": {
     "id": "sch_NPQRSTUVWXYZabcdefghij",
@@ -2673,7 +2675,7 @@
     "ends_at": null,
     "next_period_start": "2026-10-23T12:00:00Z",
     "created_invoice_count": 2,
-    "last_invoice_created_at": "2026-10-22T12:01:04Z",
+    "last_invoice_created_at": "2026-10-22T12:01:06Z",
     "last_failure_code": null,
     "last_failure_at": null,
     "amount": "5",
@@ -2691,15 +2693,15 @@
       "customer_id": 77
     },
     "order_id_prefix": "plan-77",
-    "lifetime_seconds": 43200,
-    "accuracy_percent": "1",
+    "lifetime_seconds": null,
+    "accuracy_percent": null,
     "return_url": null,
     "success_url": null,
     "callback_url": null,
     "paused_at": null,
     "ended_at": null,
     "created_at": "2026-10-22T12:00:00Z",
-    "updated_at": "2026-10-22T12:01:40Z"
+    "updated_at": "2026-10-22T12:01:41Z"
   },
   "cancel_invoice_schedule": {
     "id": "sch_NPQRSTUVWXYZabcdefghij",
@@ -2710,7 +2712,7 @@
     "ends_at": null,
     "next_period_start": null,
     "created_invoice_count": 2,
-    "last_invoice_created_at": "2026-10-22T12:01:04Z",
+    "last_invoice_created_at": "2026-10-22T12:01:06Z",
     "last_failure_code": null,
     "last_failure_at": null,
     "amount": "5",
@@ -2728,14 +2730,14 @@
       "customer_id": 77
     },
     "order_id_prefix": "plan-77",
-    "lifetime_seconds": 43200,
-    "accuracy_percent": "1",
+    "lifetime_seconds": null,
+    "accuracy_percent": null,
     "return_url": null,
     "success_url": null,
     "callback_url": null,
     "paused_at": null,
-    "ended_at": "2026-10-22T12:02:15Z",
+    "ended_at": "2026-10-22T12:02:16Z",
     "created_at": "2026-10-22T12:00:00Z",
-    "updated_at": "2026-10-22T12:02:15Z"
+    "updated_at": "2026-10-22T12:02:16Z"
   }
 }

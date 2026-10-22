@@ -32,8 +32,9 @@ class Asset(PayModel):
 
 
 class Chain(PayModel):
-    """A network. In ``list_chains()`` it carries ``assets`` and ``default_accepted_assets``; inside an invoice, link
-    or customer address the API sends neither and both are None."""
+    """A network. In ``list_chains()`` it carries ``assets``, ``default_accepted_assets`` and the payment window and
+    shortfall an invoice on it takes when neither its maker nor its account set one; inside an invoice, link or
+    customer address the API sends none of them and they are None."""
 
     key: str
     name: str
@@ -46,6 +47,8 @@ class Chain(PayModel):
     confirmations_final: int | None = None
     assets: list[Asset] | None = None
     default_accepted_assets: list[str] | None = None
+    default_invoice_lifetime_seconds: int | None = None
+    default_accuracy_percent: Decimal | None = None
 
 
 class ExchangeRate(PayModel):
@@ -206,7 +209,9 @@ class InvoicePage(PayModel):
 
 
 class PaymentLink(PayModel):
-    """A quantity link as its account sees it. ``status`` is open, all_taken, sold_out or closed."""
+    """A quantity link as its account sees it. ``status`` is open, all_taken, sold_out or closed. ``lifetime_seconds``
+    and ``accuracy_percent`` are None when the link was made without them: each payer's invoice then takes the
+    account's default for its chain."""
 
     id: str
     url: str
@@ -220,8 +225,8 @@ class PaymentLink(PayModel):
     note: str
     created_at: datetime
     destination_address: str
-    lifetime_seconds: int
-    accuracy_percent: Decimal
+    lifetime_seconds: int | None
+    accuracy_percent: Decimal | None
     return_url: str | None
     slots_held: int
     paid_count: int

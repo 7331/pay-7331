@@ -33,13 +33,14 @@ from app.payments.invoices.deposit_salts import derive_invoice_salt
 from app.payments.invoices.enums import InvoiceCreationChannel, InvoiceStatus
 from app.payments.invoices.errors import FactoryNotDeployedError, InvoiceNotRefreshableError
 from app.payments.invoices.evm_deposit_targets import EvmDepositTargets
+from app.payments.invoices.invoice_payment_terms import resolve_payment_terms_by_chain
 from app.payments.invoices.log_events import InvoiceCreated, InvoiceRefreshed
 from app.payments.invoices.models import Invoice
 from app.payments.invoices.monero_invoice_creation import allocate_monero_payment_target
 from app.payments.invoices.new_invoice_rows import InvoicePaymentTarget, build_new_invoice_row
 from app.payments.invoices.offered_chains import FIAT_CURRENCIES, resolve_offered_assets
 from app.payments.invoices.repository import InvoiceRepository
-from app.payments.invoices.types import NewInvoice
+from app.payments.invoices.types import InvoicePaymentTerms, NewInvoice
 from app.payments.invoices.wiring import InvoiceWiring
 from app.payments.monero_wallets.service import MoneroWalletService
 from app.payments.price_quotes.service import PriceQuoteService
@@ -150,6 +151,7 @@ class InvoiceCreation:
             invoice_salt=invoice_salt,
             payment_target=payment_target,
             admitted_client_network=admitted_client_network,
+            payment_terms_by_chain=await self.find_payment_terms_by_chain(new_invoice, chain_keys=list(offered)),
         )
         if not is_fiat:
             refuse_below_minimum_sweep(invoice.amount_due_base_units or 0, asset=first_asset)
@@ -329,6 +331,28 @@ class InvoiceCreation:
                 deposit_address=None, destination_address=destination_address, latest_block_number=None
             ),
             offered,
+        )
+
+    async def find_payment_terms_by_chain(
+        self, new_invoice: NewInvoice, *, chain_keys: list[str]
+    ) -> dict[str, InvoicePaymentTerms]:
+        """Each offered chain's payment window and shortfall (``invoice_payment_terms.py``): the account's saved
+        defaults are read only when the maker left a term out, and never for a signed-out invoice."""
+        saved_lifetime_seconds_by_chain: dict[str, int] = {}
+        saved_accuracy_percent_by_chain: dict[str, Decimal] = {}
+        if new_invoice.account_id is not None and (
+            new_invoice.lifetime_seconds is None or new_invoice.accuracy_percent is None
+        ):
+            saved_payment_terms = await self.account_preferences_service.find_saved_invoice_payment_terms_by_chain(
+                new_invoice.account_id
+            )
+            saved_lifetime_seconds_by_chain = saved_payment_terms.lifetime_seconds_by_chain
+            saved_accuracy_percent_by_chain = saved_payment_terms.accuracy_percent_by_chain
+        return resolve_payment_terms_by_chain(
+            new_invoice,
+            chain_keys=chain_keys,
+            saved_lifetime_seconds_by_chain=saved_lifetime_seconds_by_chain,
+            saved_accuracy_percent_by_chain=saved_accuracy_percent_by_chain,
         )
 
     async def find_confirmations_final(self, account_id: int, *, chain: MoneroChainConfiguration) -> int:

@@ -4,8 +4,9 @@
 Under the invoice row lock the pair is checked against what the invoice offered at creation (``offered_assets_by_chain``,
 never changed afterwards), the coin is quoted on the chosen chain (a stale feed or a down sequencer refuses here, before
 anything is shown), and, for an invoice that offered several chains, the chosen chain's factory predicts the deposit for
-the invoice's own salt and its destination, which was fixed and checked at creation. A pick is never changed: a second
-tap finds the invoice no longer awaiting a coin.
+the invoice's own salt and its destination, which was fixed and checked at creation. The invoice takes the chosen
+chain's payment window and accepted shortfall as resolved at creation (``invoice_payment_terms.py``), and the window
+restarts from the pick. A pick is never changed: a second tap finds the invoice no longer awaiting a coin.
 """
 
 from datetime import UTC, datetime, timedelta
@@ -16,6 +17,7 @@ from app.payments.invoices.enums import InvoiceStatus
 from app.payments.invoices.errors import FactoryNotDeployedError, InvoiceStateError
 from app.payments.invoices.evm_deposit_targets import EvmDepositTargets
 from app.payments.invoices.invoice_creation import InvoiceCreation
+from app.payments.invoices.invoice_payment_terms import find_chosen_chain_payment_terms
 from app.payments.invoices.log_events import InvoiceDepositDerived
 from app.payments.invoices.models import Invoice, offered_assets_by_chain_of
 from app.payments.invoices.wiring import InvoiceWiring
@@ -83,6 +85,9 @@ class InvoiceAssetChoice:
             offered_assets_by_chain, chain_key=chain_key, asset_symbol=asset_symbol
         )
         asset = self.chains_service.get_asset(chosen_chain_key, symbol=chosen_symbol)
+        chosen_chain_payment_terms = find_chosen_chain_payment_terms(invoice, chain_key=chosen_chain_key)
+        invoice.lifetime_seconds = chosen_chain_payment_terms.lifetime_seconds
+        invoice.accuracy_percent = chosen_chain_payment_terms.accuracy_percent
         invoice.chain_key = chosen_chain_key
         invoice.assets = list(offered_assets_by_chain[chosen_chain_key])
         invoice.asset_symbol = asset.symbol

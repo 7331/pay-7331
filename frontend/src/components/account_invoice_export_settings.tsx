@@ -7,9 +7,9 @@ import { useState } from "react"
 
 import { AccountSettingsRow } from "@/components/account_settings_row"
 import { ResponsiveSheet } from "@/components/responsive_sheet"
+import { TemporalInput } from "@/components/temporal_input"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { primaryActionButtonClassName } from "@/lib/button_size_class_names"
 import { cn } from "@/lib/utils"
 
@@ -45,26 +45,25 @@ export function AccountInvoiceExportSettings() {
         testId="settings_invoice_export_sheet"
       >
         <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Field>
+          {/* minmax(0, 1fr): neither column grows past half the sheet, whatever the date field asks for. */}
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
+            <Field className="min-w-0">
               <FieldLabel htmlFor="settings_invoice_export_from_input">From</FieldLabel>
-              <Input
+              <TemporalInput
                 id="settings_invoice_export_from_input"
                 type="date"
                 value={fromDateText}
                 onChange={(changeEvent) => setFromDateText(changeEvent.target.value)}
-                className="h-12 rounded-xl px-3 text-base"
               />
             </Field>
-            <Field data-invalid={datesAreReversed || undefined}>
+            <Field data-invalid={datesAreReversed || undefined} className="min-w-0">
               <FieldLabel htmlFor="settings_invoice_export_to_input">To</FieldLabel>
-              <Input
+              <TemporalInput
                 id="settings_invoice_export_to_input"
                 type="date"
                 value={toDateText}
                 aria-invalid={datesAreReversed}
                 onChange={(changeEvent) => setToDateText(changeEvent.target.value)}
-                className="h-12 rounded-xl px-3 text-base"
               />
             </Field>
           </div>

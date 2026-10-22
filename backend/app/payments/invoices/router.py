@@ -3,7 +3,6 @@ cookie or its API token, and the payer's public, rate-limited routes. Refunds st
 operator float."""
 
 from datetime import UTC, datetime
-from decimal import Decimal
 
 from fastapi import APIRouter, Query, Response
 from fastapi.responses import StreamingResponse
@@ -41,7 +40,6 @@ from app.payments.invoices.offered_chains import (
     resolve_account_invoice_offer,
 )
 from app.payments.invoices.schemas import (
-    DEFAULT_LIFETIME_SECONDS,
     AccountRefundRequest,
     ChooseAssetRequest,
     CreateInvoiceRequest,
@@ -71,7 +69,6 @@ from app.shared.path_params import API_PREFIX, InvoiceIdPath
 invoices_router = APIRouter(prefix=API_PREFIX, tags=["invoices"])
 
 NO_STORE_HEADERS = {"Cache-Control": "no-store"}
-DEFAULT_ACCURACY_PERCENT = Decimal("1.0")
 
 
 class SvgImageResponse(Response):
@@ -121,7 +118,8 @@ async def create_public_invoice(
     """Anyone's USD invoice on every enabled EVM chain with a factory (or the ``chains`` or ``assets_by_chain`` named),
     in the ticked assets or else every asset of each; the payer picks the chain and coin. Signed out the receiver
     address is required; signed in it defaults to the account's payout address, the invoice is the
-    account's and each offered chain's coins become the account's starting coins there."""
+    account's and each offered chain's coins become the account's starting coins there, and each offered chain takes the
+    account's saved payment window and shortfall for it (else the server's: 30 minutes, 1%)."""
     destination_address = invoice_request.destination_address or (
         account_access.payout_address if account_access is not None else None
     )
@@ -151,8 +149,8 @@ async def create_public_invoice(
             destination_address=destination_address,
             account_id=account_access.account_id if account_access is not None else None,
             note=invoice_request.note,
-            lifetime_seconds=DEFAULT_LIFETIME_SECONDS,
-            accuracy_percent=DEFAULT_ACCURACY_PERCENT,
+            # Signed in, each chain's payment window and shortfall are the account's saved ones for it, else the
+            # server's; signed out, the server's.
         ),
         client_ip_address=client_ip_address,
     )
@@ -189,7 +187,8 @@ async def create_account_invoice(
     coin amount's single coin was no pick, so it saves nothing); a server's invoices change no
     setting. With no network field it offers every enabled EVM chain; with no coin field a fiat invoice takes the
     account's saved coins on each chain and a coin amount its own coin, so ``amount`` and ``currency`` alone make an
-    invoice."""
+    invoice. ``lifetime_seconds`` and ``accuracy_percent`` apply to every offered chain; left out, each chain takes the
+    account's saved default for it, else the server's (30 minutes, 1%)."""
     is_api_token_request = isinstance(account_access, AccountApiTokenAccess)
     currency = invoice_request.currency.upper()
     offer = resolve_account_invoice_offer(

@@ -5,6 +5,7 @@ from typing import Annotated
 
 from pydantic import Field, JsonValue
 
+from app.payments.chains.invoice_payment_terms import AccuracyPercent, InvoiceLifetimeSeconds
 from app.shared.schemas import ApiRequest, ApiResponse, SingleLineText
 
 ADDRESS_PATTERN = r"^0x[0-9a-fA-F]{40}$"
@@ -77,6 +78,11 @@ class AccountSessionResponse(ApiResponse):
     # Every enabled Monero chain's key and the confirmations its XMR invoices count final at: the account's saved
     # number where it set one; a chain left out stands at the chain's default.
     confirmations_final_by_chain: dict[str, int]
+    # Every enabled chain's key and the payment window (seconds) and accepted shortfall (percent, a decimal string) its
+    # invoices take when their maker sets none: the account's saved one where it set one; a chain left out stands at
+    # the server's default (`GET /chains` lists it per chain).
+    invoice_lifetime_seconds_by_chain: dict[str, int]
+    accuracy_percent_by_chain: dict[str, str]
     # As saved (an email address, `@telegram_name` or an https link); null when unset.
     support_contact: str | None
 
@@ -99,6 +105,13 @@ class UpdateCurrentAccountRequest(ApiRequest):
     # out keeps its saved number; a number below the chain default is the receiver accepting the reorg risk; `null`
     # clears the chain's saved number back to the default.
     confirmations_final_by_chain: dict[str, ConfirmationsFinal | None] | None = Field(default=None, max_length=8)
+    # The payment window and the accepted shortfall per enabled chain key, for the account's invoices, quantity links
+    # and schedules made without one (300 to 43200 seconds; 0 to 5 percent, a number or a decimal string). A chain
+    # left out keeps its saved value; `null` clears it back to the server's default. Invoices already made keep theirs.
+    invoice_lifetime_seconds_by_chain: dict[str, InvoiceLifetimeSeconds | None] | None = Field(
+        default=None, max_length=8
+    )
+    accuracy_percent_by_chain: dict[str, AccuracyPercent | None] | None = Field(default=None, max_length=8)
     # An email address, a Telegram handle (`@name`, 5 to 32 of A-Z, a-z, 0-9, _) or an https link; "" or null clears
     # it. Left out, it stays.
     support_contact: SingleLineText | None = Field(default=None, max_length=200)

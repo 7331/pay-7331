@@ -41,6 +41,13 @@ class AccountConfirmationsFinalSaved(LogEvent):
     chain_keys: list[str]
 
 
+class AccountInvoicePaymentTermsSaved(LogEvent):
+    message = "Account's per-chain payment window and accepted shortfall saved"
+    operation = "account_settings"
+    account_id: int
+    chain_keys: list[str]
+
+
 class AccountPayoutAddressChanged(LogEvent):
     message = "Account's payout address changed after a fresh passkey check"
     operation = "account_payout_address_change"

@@ -622,6 +622,12 @@ class AccountService:
             confirmations_final_by_chain=account_preferences_service.resolve_confirmations_final_by_chain(
                 saved_by_chain=account.confirmations_final_by_chain
             ),
+            invoice_lifetime_seconds_by_chain=account_preferences_service.resolve_saved_values_of_enabled_chains(
+                account.invoice_lifetime_seconds_by_chain
+            ),
+            accuracy_percent_by_chain=account_preferences_service.resolve_saved_values_of_enabled_chains(
+                account.accuracy_percent_by_chain
+            ),
             support_contact=account.support_contact,
         )
 
@@ -663,6 +669,12 @@ class AccountService:
             ),
             confirmations_final_by_chain=account_preferences_service.resolve_confirmations_final_by_chain(
                 saved_by_chain=account.confirmations_final_by_chain
+            ),
+            invoice_lifetime_seconds_by_chain=account_preferences_service.resolve_saved_values_of_enabled_chains(
+                account.invoice_lifetime_seconds_by_chain
+            ),
+            accuracy_percent_by_chain=account_preferences_service.resolve_saved_values_of_enabled_chains(
+                account.accuracy_percent_by_chain
             ),
             support_contact=account.support_contact,
         )

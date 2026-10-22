@@ -8,8 +8,12 @@ from pydantic import BaseModel, ConfigDict
 from app.payments.chains.types import AssetConfiguration
 from app.payments.invoices.creation_limits import AdmittedClientNetwork
 from app.payments.invoices.enums import InvoiceStatus
+from app.payments.invoices.invoice_payment_terms import (
+    find_payment_terms_while_choosing,
+    present_payment_terms_by_chain,
+)
 from app.payments.invoices.models import Invoice
-from app.payments.invoices.types import NewInvoice
+from app.payments.invoices.types import InvoicePaymentTerms, NewInvoice
 from app.shared.amounts import to_base_units
 
 
@@ -41,11 +45,14 @@ def build_new_invoice_row(
     invoice_salt: bytes,
     payment_target: InvoicePaymentTarget,
     admitted_client_network: AdmittedClientNetwork | None,
+    payment_terms_by_chain: dict[str, InvoicePaymentTerms],
 ) -> Invoice:
     """One chain with one asset starts ``awaiting_payment``; several assets or several chains ``awaiting_asset``. A
     crypto amount is due as asked. ``chain_key`` and ``assets`` are the first offered chain's: the placeholder an old
-    client sees until the payer picks."""
+    client sees until the payer picks. ``payment_terms_by_chain`` has every offered chain's resolved terms
+    (``invoice_payment_terms.py``)."""
     now = datetime.now(UTC)
+    payment_terms = find_payment_terms_while_choosing(payment_terms_by_chain)
     chain_key, assets = next(iter(offered_assets.items()))
     single_asset = assets[0] if len(offered_assets) == 1 and len(assets) == 1 else None
     crypto_amount_base_units = (
@@ -92,8 +99,9 @@ def build_new_invoice_row(
         return_url=new_invoice.return_url,
         success_url=new_invoice.success_url,
         callback_url=new_invoice.callback_url if new_invoice.account_id is not None else None,
-        lifetime_seconds=new_invoice.lifetime_seconds,
-        accuracy_percent=new_invoice.accuracy_percent,
-        expires_at=now + timedelta(seconds=new_invoice.lifetime_seconds),
+        lifetime_seconds=payment_terms.lifetime_seconds,
+        accuracy_percent=payment_terms.accuracy_percent,
+        payment_terms_by_chain=present_payment_terms_by_chain(payment_terms_by_chain),
+        expires_at=now + timedelta(seconds=payment_terms.lifetime_seconds),
         underpaid_open_until=new_invoice.underpaid_open_until,
     )

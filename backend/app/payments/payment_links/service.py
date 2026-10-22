@@ -14,6 +14,7 @@ from typing import Self
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.monero_sidecar_api.errors import MoneroSidecarError, MoneroSidecarInputRefusedError
+from app.payments.chains.invoice_payment_terms import format_accuracy_percent
 from app.payments.chains.service import present_chain
 from app.payments.chains.types import EvmChainConfiguration, MoneroChainConfiguration
 from app.payments.invoices.errors import FactoryNotDeployedError
@@ -133,7 +134,11 @@ class PaymentLinkService:
             created_at=public_payment_link_response.created_at,
             destination_address=await self.find_current_destination_address(payment_link),
             lifetime_seconds=payment_link.lifetime_seconds,
-            accuracy_percent=format(payment_link.accuracy_percent.normalize(), "f"),
+            accuracy_percent=(
+                format_accuracy_percent(payment_link.accuracy_percent)
+                if payment_link.accuracy_percent is not None
+                else None
+            ),
             return_url=payment_link.return_url,
             slots_held=counts.slots_held,
             paid_count=counts.paid,

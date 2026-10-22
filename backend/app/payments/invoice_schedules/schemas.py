@@ -1,18 +1,20 @@
 """Invoice schedule request bodies and resources. Amounts are decimal strings."""
 
 from datetime import datetime
-from decimal import Decimal
 
 from pydantic import Field, JsonValue
 
+from app.payments.chains.invoice_payment_terms import (
+    MAXIMUM_INVOICE_LIFETIME_SECONDS,
+    AccuracyPercent,
+    InvoiceLifetimeSeconds,
+)
 from app.payments.invoice_schedules.enums import InvoiceScheduleInterval, InvoiceScheduleStatus
 from app.payments.invoices.schemas import (
     ADDRESS_PATTERN,
     DECIMAL_TEXT_PATTERN,
     MAXIMUM_INVOICE_ASSETS,
-    MAXIMUM_LIFETIME_SECONDS,
     MAXIMUM_OFFERED_CHAINS,
-    MINIMUM_LIFETIME_SECONDS,
     AssetsByChain,
     AssetSymbol,
     ChainKey,
@@ -22,9 +24,10 @@ from app.payments.invoices.schemas import (
 )
 from app.shared.schemas import ApiRequest, ApiResponse, IdentifierText, MultilineText, WebPageUrl
 
-# The payer gets the link from the account's server, not at checkout, so a scheduled invoice waits the longest an
-# invoice may (12 hours); `refresh_expired` on `POST /invoices` makes a new one after.
-DEFAULT_SCHEDULED_INVOICE_LIFETIME_SECONDS = MAXIMUM_LIFETIME_SECONDS
+# The payer gets the link from the account's server, not at checkout, so where neither the schedule nor the account's
+# chain default sets a window, a scheduled invoice waits the longest an invoice may (12 hours); `refresh_expired` on
+# `POST /invoices` makes a new one after.
+DEFAULT_SCHEDULED_INVOICE_LIFETIME_SECONDS = MAXIMUM_INVOICE_LIFETIME_SECONDS
 # An order id is at most 128 characters: the prefix, a dash and eight digits of the day fit.
 MAXIMUM_ORDER_ID_PREFIX_LENGTH = 100
 MAXIMUM_ENDS_AFTER_INVOICE_COUNT = 10_000
@@ -49,10 +52,10 @@ class CreateInvoiceScheduleRequest(ApiRequest):
     order_id_prefix: IdentifierText | None = Field(
         default=None, min_length=1, max_length=MAXIMUM_ORDER_ID_PREFIX_LENGTH
     )
-    lifetime_seconds: int = Field(
-        default=DEFAULT_SCHEDULED_INVOICE_LIFETIME_SECONDS, ge=MINIMUM_LIFETIME_SECONDS, le=MAXIMUM_LIFETIME_SECONDS
-    )
-    accuracy_percent: Decimal = Field(default=Decimal("1.0"), ge=0, le=5, max_digits=4, decimal_places=2)
+    # Every invoice's payment window and accepted shortfall. Left out (or null), each invoice takes the account's saved
+    # default for its chain as it stands when the invoice is made, else 12 hours and 1%.
+    lifetime_seconds: InvoiceLifetimeSeconds | None = None
+    accuracy_percent: AccuracyPercent | None = None
     return_url: WebPageUrl | None = None
     success_url: WebPageUrl | None = None
     callback_url: str | None = Field(default=None, min_length=1, max_length=2048)
@@ -88,8 +91,10 @@ class InvoiceScheduleResponse(ApiResponse):
     note: str
     metadata: dict[str, JsonValue] | None
     order_id_prefix: str
-    lifetime_seconds: int
-    accuracy_percent: str
+    # As the schedule was made: null means each invoice takes the account's default for its chain, else 12 hours and
+    # 1% (each invoice's own `expires_at` and `accuracy_percent` say what it got).
+    lifetime_seconds: int | None
+    accuracy_percent: str | None
     return_url: str | None
     success_url: str | None
     callback_url: str | None
