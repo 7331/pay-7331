@@ -2084,7 +2084,7 @@ export interface components {
             /** Format: date-time */
             created_at: string;
             credited: boolean;
-            id: number;
+            id: string;
             sender: string | null;
             tx_hash: string | null;
             uncredited_reason: "wrong_coin" | null;

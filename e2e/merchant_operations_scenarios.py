@@ -297,7 +297,7 @@ TIME_PATTERN = re.compile(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z")
 ADDRESS_PATTERN = re.compile(r"0x[0-9a-fA-F]{40}(?![0-9a-fA-F])")
 HASH_PATTERN = re.compile(r"0x[0-9a-fA-F]{64}(?![0-9a-fA-F])")
 # Every random public id, and a test delivery's webhook-id, which is as random.
-PUBLIC_ID_PATTERN = re.compile(r"\b(?:inv|lnk|sda|sch|evt|whd|tok|pk|test)_[1-9A-HJ-NP-Za-km-z]{22}\b")
+PUBLIC_ID_PATTERN = re.compile(r"\b(?:inv|lnk|sda|sdp|sch|evt|whd|tok|pk|test)_[1-9A-HJ-NP-Za-km-z]{22}\b")
 BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
@@ -349,7 +349,7 @@ class DocsResponseAnonymizer:
         text = PUBLIC_ID_PATTERN.sub(
             lambda match: (
                 match.group(0)
-                if match.group(0).startswith(("inv_Test", "sda_Test", "sch_Test"))
+                if match.group(0).startswith(("inv_Test", "sda_Test", "sdp_Test", "sch_Test"))
                 else self.stand_in(match.group(0), kind="public_id")
             ),
             text,

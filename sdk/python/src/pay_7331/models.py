@@ -243,7 +243,7 @@ class StaticDepositPayment(PayModel):
     """One payment into a customer address. Credit your customer by ``id`` (one transfer may be several rows, or one
     row several transfers), with ``amount_usd`` of a ``credited`` one."""
 
-    id: int
+    id: str
     asset_symbol: str
     amount: Decimal
     amount_usd: Decimal | None

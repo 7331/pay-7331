@@ -72,7 +72,8 @@ SAMPLE_EUR_PER_USD = Decimal("0.86")
 SAMPLE_ORDER_ID = "test-order-1042"
 SAMPLE_STATIC_DEPOSIT_ADDRESS_ID = "sda_TestSampLe7e57SampLe7e"
 SAMPLE_CUSTOMER_REFERENCE = "test-customer-77"
-SAMPLE_STATIC_DEPOSIT_PAYMENT_ID = 1
+SAMPLE_STATIC_DEPOSIT_PAYMENT_ID = "sdp_TestSampLe7e57SampLe7e"
+SAMPLE_STRAY_STATIC_DEPOSIT_PAYMENT_ID = "sdp_TestSampLe7e57StrayPay"
 
 
 def choose_sample_chain(chains_service: ChainsService) -> EvmChainConfiguration:
@@ -287,7 +288,7 @@ def build_sample_static_deposit_address_event_data(
     match event_type:
         case StaticDepositAddressEventType.PAYMENT_RECEIVED | StaticDepositAddressEventType.STRAY_PAYMENT:
             payment = StaticDepositAddressPayment(
-                id=SAMPLE_STATIC_DEPOSIT_PAYMENT_ID + 1 if is_stray else SAMPLE_STATIC_DEPOSIT_PAYMENT_ID,
+                id=SAMPLE_STRAY_STATIC_DEPOSIT_PAYMENT_ID if is_stray else SAMPLE_STATIC_DEPOSIT_PAYMENT_ID,
                 asset_symbol=native_asset.symbol if is_stray else asset.symbol,
                 amount="12.5" if is_stray else format_sample_amount(SAMPLE_FIAT_AMOUNT),
                 amount_usd=None if is_stray else SAMPLE_FIAT_AMOUNT,
