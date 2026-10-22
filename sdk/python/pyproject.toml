@@ -1,0 +1,78 @@
+[project]
+name = "pay-7331"
+version = "0.1.0"
+description = "Python client for the pay-7331 API: invoices, quantity links, customer addresses, events and webhooks"
+readme = "README.md"
+# 3.10: Ubuntu 22.04 LTS still ships it, though python.org ended it on 2026-10-01
+# (https://devguide.python.org/versions/); Debian 12 ships 3.11. Current pydantic needs 3.10 too.
+requires-python = ">=3.10"
+dependencies = [
+    # The sync and async clients (https://www.python-httpx.org/).
+    "httpx>=0.27",
+    # The typed responses (https://docs.pydantic.dev/): decimal strings become Decimal, never float.
+    "pydantic>=2.7",
+    # typing.Self before Python 3.11; pydantic already depends on it.
+    "typing-extensions>=4.6; python_version < '3.11'",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.10",
+    # Pinned exactly as backend/: ty is pre-1.0 and any 0.0.x release may change what it accepts.
+    "ty==0.0.85",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+# A prerelease only where this file names one (as backend/).
+prerelease = "explicit"
+
+# The backend's ruff rules (backend/pyproject.toml), minus the ones that only make sense inside the service.
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W", "I", "N", "UP", "YTT", "ASYNC", "S", "BLE", "FBT", "B", "A",
+    "COM", "C4", "DTZ", "T10", "EM", "EXE", "FA", "ISC", "ICN", "G", "INP", "PIE",
+    "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SLOT", "SIM", "TID", "INT",
+    "ARG", "PTH", "TD", "FIX", "ERA", "PGH", "PL", "TRY", "FLY", "PERF", "FURB",
+    "LOG", "RUF", "ANN",
+]
+ignore = [
+    "E501", "COM812",
+    "TRY003", "EM101", "EM102",
+    "FBT001", "FBT002", "FBT003",
+    "PLR0913", "PLR0912", "PLR0915", "PLR0911",
+    "PLR2004",
+]
+
+[tool.ruff.lint.pylint]
+max-positional-args = 1
+
+[tool.ruff.lint.isort]
+known-first-party = ["pay_7331"]
+force-sort-within-sections = true
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ty.environment]
+python-version = "3.10"
+
+[tool.ty.analysis]
+respect-type-ignore-comments = false
+
+[tool.ty.rules]
+possibly-unresolved-reference = "error"
+possibly-missing-attribute = "error"
+possibly-missing-import = "error"
+unused-ignore-comment = "warn"

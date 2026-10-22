@@ -1,0 +1,26 @@
+# Runs when pay-7331-backup.service fails (its OnFailure=). Nothing on this box sends mail, so it leaves two
+# durable traces: one daemon.err journal line tagged
+# pay-7331-backup, and /var/lib/pay-7331/backup-failed (mtime = last failure, contents = why). The backup
+# script removes the marker at the end of a successful run. Then it tells the operator: an operator.alert
+# `backup_failed` on the operator's account, on its /activity and Discord, once while it lasts and then at the
+# Discord reminder cadence.
+[Unit]
+Description=Record that a pay-7331 backup did not complete and alert the operator
+
+[Service]
+Type=oneshot
+# A oneshot has no start timeout by default; the alert is a few seconds of docker exec.
+TimeoutStartSec=2min
+ExecStart=/bin/sh -c 'mkdir -p /var/lib/pay-7331 && \
+  { printf "unit=%s result=%s at=%s\\n" "$${MONITOR_UNIT:-pay-7331-backup.service}" \
+      "$$(systemctl show -p Result --value pay-7331-backup.service 2>/dev/null || echo unknown)" \
+      "$$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)" ; } > /var/lib/pay-7331/backup-failed && \
+  chmod 0600 /var/lib/pay-7331/backup-failed && \
+  logger -t pay-7331-backup -p daemon.err "backup did not complete; see /var/lib/pay-7331/backup-failed"'
+# The marker above is written first, so it stays even when the alert cannot be recorded (api container down, no
+# operator account): then this unit fails and shows in `systemctl --failed`. An OnFailure= service gets the failed
+# unit's result in $MONITOR_SERVICE_RESULT, $MONITOR_EXIT_CODE and $MONITOR_EXIT_STATUS while it is the only unit
+# naming it (systemd 251+; https://github.com/systemd/systemd/blob/main/man/systemd.exec.xml).
+ExecStart=/bin/sh -c 'detail="result=$${MONITOR_SERVICE_RESULT:-unknown} code=$${MONITOR_EXIT_CODE:-unknown}"; \
+  detail="$$detail status=$${MONITOR_EXIT_STATUS:-unknown}"; \
+  exec docker exec pay-7331-api python -m app.cli record-operator-alert --kind backup_failed --detail "$$detail"'

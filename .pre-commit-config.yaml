@@ -1,0 +1,240 @@
+# One gate, two stages. `pre-commit`: fast auto-fixers on
+# the staged Python files. `pre-push`: every lint, type, architecture, dead-code, complexity and contract gate, so a
+# push that would fail CI never leaves the machine. .github/workflows/ci.yml runs the same hooks by id, so the two
+# cannot drift. Each hook runs only when the push touches what it reads (`files`).
+#
+# Install once per clone: `uvx pre-commit install --hook-type pre-commit --hook-type pre-push --allow-missing-config`.
+# Run everything by hand: `uvx pre-commit run --hook-stage pre-push --all-files`.
+# Stages: https://pre-commit.com/#confining-hooks-to-run-at-certain-stages; default_install_hook_types and
+# default_stages: https://pre-commit.com/#top-level-default_install_hook_types.
+#
+# Hooks are `repo: local` with `language: system`, so tool versions come from backend/uv.lock, sdk/python/uv.lock and
+# frontend/pnpm-lock.yaml, the versions CI installs. pnpm hooks cd into frontend/. The end-to-end scripts in e2e/ stay
+# out: they boot a fork stack and are run by hand when a change needs them.
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-push]
+minimum_pre_commit_version: "4.0.0"
+
+repos:
+  - repo: local
+    hooks:
+      # ── pre-commit: auto-fixers on the staged files ─────────────────────────────────────────────────────────────
+      # Each tree with the ruff it is checked with: backend's and sdk/python's own locks. ruff finds each file's
+      # pyproject.toml itself (https://docs.astral.sh/ruff/configuration/#config-file-discovery); e2e/ has none, so its
+      # hooks pass backend's with --config.
+      - id: ruff-format-backend
+        name: ruff format (backend)
+        entry: uv run --project backend ruff format --force-exclude
+        language: system
+        files: ^backend/
+        types_or: [python, pyi]
+        require_serial: true
+        stages: [pre-commit]
+      - id: ruff-check-backend
+        name: ruff check --fix (backend)
+        entry: uv run --project backend ruff check --fix --force-exclude
+        language: system
+        files: ^backend/
+        types_or: [python, pyi]
+        require_serial: true
+        stages: [pre-commit]
+      - id: ruff-format-sdk-python
+        name: ruff format (sdk/python)
+        entry: uv run --project sdk/python ruff format --force-exclude
+        language: system
+        files: ^sdk/python/
+        types_or: [python, pyi]
+        require_serial: true
+        stages: [pre-commit]
+      - id: ruff-check-sdk-python
+        name: ruff check --fix (sdk/python)
+        entry: uv run --project sdk/python ruff check --fix --force-exclude
+        language: system
+        files: ^sdk/python/
+        types_or: [python, pyi]
+        require_serial: true
+        stages: [pre-commit]
+      - id: ruff-format-e2e
+        name: ruff format (e2e)
+        entry: uv run --project backend ruff format --force-exclude --config backend/pyproject.toml
+        language: system
+        files: ^e2e/
+        types_or: [python, pyi]
+        require_serial: true
+        stages: [pre-commit]
+      # --fix-only: e2e/ has no lint gate (it carries findings the backend's rules make, such as PLR0917 on its
+      # helpers), so this applies the safe fixes and never blocks a commit on what is left.
+      - id: ruff-check-e2e
+        name: ruff check --fix-only (e2e)
+        entry: uv run --project backend ruff check --fix-only --force-exclude --config backend/pyproject.toml
+        language: system
+        files: ^e2e/
+        types_or: [python, pyi]
+        require_serial: true
+        stages: [pre-commit]
+
+      # ── pre-push, backend: runs when the push touches backend/ or e2e/ ──────────────────────────────────────────
+      - id: backend-sync
+        name: backend dependencies (locked, as CI installs them)
+        entry: uv sync --locked --quiet --project backend
+        language: system
+        pass_filenames: false
+        files: &backend-area ^(backend|e2e)/
+      # e2e/ has no pyproject.toml of its own: --config makes its scripts follow backend's format settings too.
+      - id: backend-format
+        name: ruff format --check (backend and e2e)
+        entry: uv run --directory backend ruff format --check --config pyproject.toml . ../e2e
+        language: system
+        pass_filenames: false
+        files: *backend-area
+      - id: backend-lint
+        name: ruff check (backend)
+        entry: uv run --directory backend ruff check .
+        language: system
+        pass_filenames: false
+        files: ^backend/
+      - id: backend-types
+        name: ty check (backend)
+        entry: uv run --directory backend ty check app
+        language: system
+        pass_filenames: false
+        files: ^backend/
+      # vulture_whitelist.py is the only suppression (https://github.com/jendrikseipp/vulture#whitelists).
+      - id: backend-dead-code
+        name: vulture
+        entry: uv run --directory backend vulture app/ vulture_whitelist.py --min-confidence 80
+        language: system
+        pass_filenames: false
+        files: ^backend/
+      # Thresholds: no block worse than C, no module averaging worse than B, the app averaging A
+      # (https://github.com/rubik/xenon#usage).
+      - id: backend-complexity
+        name: xenon complexity gate
+        entry: uv run --directory backend xenon --max-absolute C --max-modules B --max-average A app/
+        language: system
+        pass_filenames: false
+        files: ^backend/
+      # The pin matches SEMGREP_VERSION in ci.yml. --strict fails on a file semgrep cannot parse, --error on any
+      # finding (https://semgrep.dev/docs/cli-reference). semgrep-core can overflow an 8 MiB stack,
+      # so the soft limit is lifted.
+      - id: backend-house-rules
+        name: semgrep house rules
+        entry: bash -c 'ulimit -s unlimited 2>/dev/null; cd backend && uvx semgrep==1.176.1 scan
+          --config semgrep/house-rules.yaml --metrics=off --error --strict --quiet --timeout 60 app/ migrations/'
+        language: system
+        pass_filenames: false
+        files: ^backend/
+      - id: backend-import-contracts
+        name: lint-imports
+        entry: uv run --directory backend lint-imports
+        language: system
+        pass_filenames: false
+        files: ^backend/
+      - id: backend-dependencies
+        name: deptry
+        entry: uv run --directory backend deptry .
+        language: system
+        pass_filenames: false
+        files: ^backend/
+      # The API's OpenAPI document, dumped to a temporary folder, must be valid OpenAPI 3.1
+      # (https://github.com/python-openapi/openapi-spec-validator#usage).
+      - id: backend-openapi-valid
+        name: OpenAPI 3.1 document is valid
+        entry: bash -c 'set -euo pipefail; dump_folder="$(mktemp -d)"; trap "rm -rf \"$dump_folder\"" EXIT;
+          uv run --project backend python backend/tools/dump_openapi.py "$dump_folder/openapi.json";
+          uvx openapi-spec-validator==0.9.0 --schema 3.1 "$dump_folder/openapi.json"'
+        language: system
+        pass_filenames: false
+        files: ^backend/
+
+      # ── pre-push, sdk/python ────────────────────────────────────────────────────────────────────────────────────
+      - id: sdk-python-format
+        name: ruff format --check (sdk/python)
+        entry: uv run --directory sdk/python ruff format --check .
+        language: system
+        pass_filenames: false
+        files: ^sdk/python/
+      - id: sdk-python-lint
+        name: ruff check (sdk/python)
+        entry: uv run --directory sdk/python ruff check .
+        language: system
+        pass_filenames: false
+        files: ^sdk/python/
+      - id: sdk-python-types
+        name: ty check (sdk/python)
+        entry: uv run --directory sdk/python ty check
+        language: system
+        pass_filenames: false
+        files: ^sdk/python/
+
+      # ── pre-push, contracts: foundryup installs into ~/.foundry/bin, which is not on every shell's PATH ─────────
+      - id: contracts-format
+        name: forge fmt --check (contracts)
+        entry: bash -c 'if [ -d "$HOME/.foundry/bin" ]; then PATH="$HOME/.foundry/bin:$PATH"; fi; cd contracts &&
+          forge fmt --check'
+        language: system
+        pass_filenames: false
+        files: ^contracts/
+      - id: contracts-build-test
+        name: forge build and test (contracts)
+        entry: bash -c 'if [ -d "$HOME/.foundry/bin" ]; then PATH="$HOME/.foundry/bin:$PATH"; fi; cd contracts &&
+          forge build && forge test'
+        language: system
+        pass_filenames: false
+        files: ^contracts/
+
+      # ── pre-push, frontend: runs when the push touches frontend/ ────────────────────────────────────────────────
+      - id: frontend-dependencies
+        name: frontend dependencies (frozen lockfile, as CI installs them)
+        entry: bash -c 'cd frontend && pnpm install --frozen-lockfile --silent'
+        language: system
+        pass_filenames: false
+        files: &frontend-area ^frontend/
+        exclude: \.md$
+      # The committed wire types in frontend/src/lib/generated/ are regenerated from the API's OpenAPI document and
+      # compared by openapi-typescript's own --check (https://openapi-ts.dev/cli). A backend change can move the
+      # document, so this runs on backend/ too.
+      - id: frontend-api-types-current
+        name: generated API types match the OpenAPI document
+        entry: bash -c 'cd frontend && pnpm generate:api-types --check'
+        language: system
+        pass_filenames: false
+        files: ^(backend|frontend)/
+        exclude: \.md$
+      - id: frontend-types
+        name: tsc -b
+        entry: bash -c 'cd frontend && pnpm exec tsc -b'
+        language: system
+        pass_filenames: false
+        files: *frontend-area
+        exclude: \.md$
+      - id: frontend-lint
+        name: oxlint
+        entry: bash -c 'cd frontend && pnpm lint'
+        language: system
+        pass_filenames: false
+        files: *frontend-area
+        exclude: \.md$
+      - id: frontend-dead-code
+        name: knip
+        entry: bash -c 'cd frontend && pnpm check:unused'
+        language: system
+        pass_filenames: false
+        files: *frontend-area
+        exclude: \.md$
+
+      # ── pre-push, docs ──────────────────────────────────────────────────────────────────────────────────────────
+      # Markdown prose: no Unicode dashes or ellipses.
+      - id: docs-unicode-punctuation
+        name: no Unicode dash or ellipsis in the docs
+        entry: '—|–|…'
+        language: pygrep
+        types: [markdown]
+
+  # Workflow lint, the same pin as ci.yml's zizmor job (https://docs.zizmor.sh/integrations/#pre-commit).
+  - repo: https://github.com/woodruffw/zizmor-pre-commit
+    rev: v1.30.1
+    hooks:
+      - id: zizmor
+        args: [--persona=regular, --no-progress, --strict-collection]
+        files: ^\.github/workflows/

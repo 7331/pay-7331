@@ -1,0 +1,225 @@
+# pay-7331: Postgres 18, Redis 8, the API, the watcher, and a one-shot migration (PLAN.md section 2).
+# Settings come from ./.env (.env.example lists every key). The API is published on 127.0.0.1 only.
+#
+#   docker compose up -d --build --wait            # migrate, then api and watcher
+#   docker compose down -v                         # also drops the volumes
+#
+# The `local-chain` profile adds an anvil (the host's foundry binary, PAY_ANVIL_BINARY, run in the backend image) on
+# the stack's network, published on 127.0.0.1:${PAY_ANVIL_PORT}; PAY_ANVIL_FORK_URL set makes it a fork. Containers
+# cannot reach an anvil on the host itself: a host firewall may drop bridge traffic to the host. Its chain id is
+# PAY_ANVIL_CHAIN_ID (137 Polygon, the default; 42161 for an Arbitrum One fork).
+# The `local-arbitrum-chain` profile adds a second anvil, `anvil-arbitrum`, an Arbitrum One fork of its own VM beside the
+# Polygon one (the two-chain stack of e2e/fork_stack.py, `PAY_E2E_FORK_CHAIN=mixed`), on 127.0.0.1:${PAY_ANVIL_ARBITRUM_PORT}.
+#
+# The `monero` profile adds the Monero scanner sidecar (xmr-scanner/), which needs PAY_INVOICE_SALT_SEED in .env.
+name: pay-7331
+
+x-application: &application
+  build: { context: ., dockerfile: backend/Dockerfile }
+  # PAY_BACKEND_IMAGE gives a second stack (the e2e scripts) its own tag, so its build never replaces the image a
+  # running stack restarts from.
+  image: ${PAY_BACKEND_IMAGE:-pay-7331-backend:local}
+  # PAY_ENV_FILE points a second stack (the e2e scripts) at its own settings.
+  env_file: [{ path: "${PAY_ENV_FILE:-.env}", required: true }]
+  environment: &application-environment
+    DATABASE_URL: postgresql+psycopg://pay:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/pay
+    REDIS_URL: redis://redis:6379/0
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  networks: [internal, egress]
+  restart: unless-stopped
+
+# `environment` wins over `env_file` (https://docs.docker.com/compose/how-tos/environment-variables/envvars-precedence/),
+# so this blanks every chain's operator key variables for a service that must not hold them (the api, the migration):
+# only the watcher signs, and the operator CLI runs in the watcher container.
+x-environment-without-operator-keys: &environment-without-operator-keys
+  <<: *application-environment
+  PAY_OPERATOR_PRIVATE_KEY_POLYGON: ""
+  PAY_OPERATOR_PRIVATE_KEY_POLYGON_AMOY: ""
+  PAY_OPERATOR_PRIVATE_KEY_LOCAL_FORK: ""
+  PAY_OPERATOR_PRIVATE_KEY_ARBITRUM: ""
+  PAY_OPERATOR_PRIVATE_KEY_ARBITRUM_SEPOLIA: ""
+  PAY_OPERATOR_PRIVATE_KEY_LOCAL_ARBITRUM_FORK: ""
+  PAY_SWEEPER_PRIVATE_KEYS_POLYGON: ""
+  PAY_SWEEPER_PRIVATE_KEYS_POLYGON_AMOY: ""
+  PAY_SWEEPER_PRIVATE_KEYS_LOCAL_FORK: ""
+  PAY_SWEEPER_PRIVATE_KEYS_ARBITRUM: ""
+  PAY_SWEEPER_PRIVATE_KEYS_ARBITRUM_SEPOLIA: ""
+  PAY_SWEEPER_PRIVATE_KEYS_LOCAL_ARBITRUM_FORK: ""
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment: { POSTGRES_DB: pay, POSTGRES_USER: pay, POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?}" }
+    volumes: [postgres_data:/var/lib/postgresql]
+    networks: [internal]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U pay -d pay"], interval: 2s, timeout: 5s, retries: 30 }
+    restart: unless-stopped
+
+  redis:
+    image: redis:8
+    # Copies with TTLs only (PLAN.md section 2): no persistence, evict keys that carry a TTL.
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "volatile-lru"]
+    networks: [internal]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 2s, timeout: 5s, retries: 30 }
+    restart: unless-stopped
+
+  migrate:
+    <<: *application
+    command: ["alembic", "upgrade", "head"]
+    environment: *environment-without-operator-keys
+    restart: "no"
+    depends_on: { postgres: { condition: service_healthy } }
+
+  api:
+    <<: *application
+    # Worker processes, each with its own lifespan loops and a 5 + 5 Postgres pool (app/lifespan/composition.py); what
+    # they share is in Postgres or Redis. Uvicorn waits for open connections before the lifespan shutdown,
+    # and an SSE stream (/activity) never closes by itself, so without a limit every stop ran into Compose's 10 s
+    # stop_grace_period and a SIGKILL with no shutdown at all: after 5 s uvicorn cancels the rest and shuts down
+    # ("--timeout-graceful-shutdown", https://uvicorn.dev/settings/; https://uvicorn.dev/server-behavior/;
+    # stop_grace_period, https://docs.docker.com/reference/compose-file/services/).
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --workers
+      - ${PAY_API_WORKERS:-2}
+      - --timeout-graceful-shutdown
+      - "5"
+    ports: ["127.0.0.1:${PAY_API_PORT:-18080}:8000"]
+    # The internet-facing API holds no operator key (app/lifespan/composition.py refuses one).
+    environment: *environment-without-operator-keys
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    # Every check spawns a Python whose dentries stay charged to the container as reclaimable slab: at a 2 s interval
+    # that was 694 MB of the 1 GiB limit within a day, so checks run every 30 s after a fast start.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+      start_interval: 2s
+
+  watcher:
+    <<: *application
+    command: ["python", "-m", "app.watcher"]
+    stop_grace_period: 30s
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+      # Started first when the monero profile is on (deploy/deploy.sh turns it on with PAY_MONERO_SIDECAR_URL set);
+      # not required otherwise. Started, not healthy: a sidecar holding for an unusable wallet must not keep the EVM
+      # chains' watcher down (https://docs.docker.com/reference/compose-file/services/#depends_on, `required`).
+      xmr-scanner: { condition: service_started, required: false }
+    # Unhealthy once no chain tick completed for 60 s (the heartbeat the watcher writes to Redis after each tick), two
+    # checks in a row: about 2 minutes without progress. Checks run every 30 s, not 10 s: each leaves slab charged to the
+    # container, like the api's. The start period covers a boot that waits for the advisory lock
+    # (https://docs.docker.com/reference/compose-file/services/#healthcheck; start_interval needs Compose 2.20.2).
+    healthcheck:
+      test: ["CMD", "python", "-m", "app.watcher_healthcheck"]
+      interval: 30s
+      timeout: 8s
+      retries: 2
+      start_period: 120s
+      start_interval: 2s
+
+  # The Monero scanner sidecar (PLAN.md section 14; xmr-scanner/README.md), started with `--profile monero` only. It
+  # gets no env_file: the database URL and PAY_INVOICE_SALT_SEED (to open sealed view keys) are its only secrets, so
+  # no operator key can reach it. Interpolated from the env file compose reads (./.env, or --env-file in production).
+  # The Python API reaches it at http://xmr-scanner:8750 on `internal`; no host port.
+  xmr-scanner:
+    profiles: [monero]
+    build: { context: xmr-scanner }
+    image: ${PAY_XMR_SCANNER_IMAGE:-pay-7331-xmr-scanner:local}
+    environment:
+      DATABASE_URL: postgresql://pay:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/pay
+      # Empty: the sidecar refuses to start (exit 2, `xmr_scanner_settings_invalid`).
+      PAY_INVOICE_SALT_SEED: ${PAY_INVOICE_SALT_SEED:-}
+      XMR_SCANNER_CHAINS: ${PAY_XMR_SCANNER_CHAINS:-monero}
+      XMR_SCANNER_CHAINS_TOML_PATH: /app/chains.toml
+      XMR_SCANNER_LISTEN_ADDRESS: 0.0.0.0:8750
+      PAY_MONERO_NODES_MONERO: ${PAY_MONERO_NODES_MONERO:-}
+      PAY_MONERO_NODES_MONERO_STAGENET: ${PAY_MONERO_NODES_MONERO_STAGENET:-}
+    volumes: ["./backend/chains.toml:/app/chains.toml:ro"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [internal, egress]
+    restart: unless-stopped
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/xmr-scanner", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+      start_interval: 2s
+
+  anvil:
+    profiles: [local-chain]
+    image: ${PAY_BACKEND_IMAGE:-pay-7331-backend:local}
+    user: "10001"
+    entrypoint: ["/bin/sh", "-c"]
+    # The chain id of the chain the fork stands for (137 Polygon, 42161 Arbitrum One): `local_fork` and
+    # `local_arbitrum_fork` in chains.toml expect it (a fork keeps it anyway).
+    command:
+      - >-
+        exec /opt/anvil --host 0.0.0.0 --port 8545 --chain-id ${PAY_ANVIL_CHAIN_ID:-137} --block-time 1 --slots-in-an-epoch 1
+        ${PAY_ANVIL_FORK_URL:+--fork-url $PAY_ANVIL_FORK_URL}
+        ${PAY_ANVIL_FORK_BLOCK_NUMBER:+--fork-block-number $PAY_ANVIL_FORK_BLOCK_NUMBER}
+    environment:
+      PAY_ANVIL_FORK_URL: "${PAY_ANVIL_FORK_URL:-}"
+      PAY_ANVIL_FORK_BLOCK_NUMBER: "${PAY_ANVIL_FORK_BLOCK_NUMBER:-}"
+      HOME: /tmp
+    volumes: ["${PAY_ANVIL_BINARY:-${HOME}/.foundry/bin/anvil}:/opt/anvil:ro"]
+    ports: ["127.0.0.1:${PAY_ANVIL_PORT:-18545}:8545"]
+    tmpfs: [/tmp]
+    networks: [internal, egress]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,json; urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8545', data=json.dumps({'jsonrpc':'2.0','id':1,'method':'eth_chainId','params':[]}).encode(), headers={'content-type':'application/json'}), timeout=4)"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  anvil-arbitrum:
+    profiles: [local-arbitrum-chain]
+    image: ${PAY_BACKEND_IMAGE:-pay-7331-backend:local}
+    user: "10001"
+    entrypoint: ["/bin/sh", "-c"]
+    # Always Arbitrum One's chain id: `local_arbitrum_fork` in chains.toml expects it.
+    command:
+      - >-
+        exec /opt/anvil --host 0.0.0.0 --port 8545 --chain-id 42161 --block-time 1 --slots-in-an-epoch 1
+        ${PAY_ANVIL_ARBITRUM_FORK_URL:+--fork-url $PAY_ANVIL_ARBITRUM_FORK_URL}
+        ${PAY_ANVIL_ARBITRUM_FORK_BLOCK_NUMBER:+--fork-block-number $PAY_ANVIL_ARBITRUM_FORK_BLOCK_NUMBER}
+    environment:
+      PAY_ANVIL_ARBITRUM_FORK_URL: "${PAY_ANVIL_ARBITRUM_FORK_URL:-}"
+      PAY_ANVIL_ARBITRUM_FORK_BLOCK_NUMBER: "${PAY_ANVIL_ARBITRUM_FORK_BLOCK_NUMBER:-}"
+      HOME: /tmp
+    volumes: ["${PAY_ANVIL_BINARY:-${HOME}/.foundry/bin/anvil}:/opt/anvil:ro"]
+    ports: ["127.0.0.1:${PAY_ANVIL_ARBITRUM_PORT:-18547}:8545"]
+    tmpfs: [/tmp]
+    networks: [internal, egress]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,json; urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8545', data=json.dumps({'jsonrpc':'2.0','id':1,'method':'eth_chainId','params':[]}).encode(), headers={'content-type':'application/json'}), timeout=4)"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+volumes:
+  postgres_data:
+
+networks:
+  # Postgres and Redis sit here only; nothing on it reaches the internet.
+  internal: { internal: true }
+  # The api and watcher reach the RPC endpoints and ip-api.
+  egress: {}

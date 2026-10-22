@@ -1,0 +1,60 @@
+.documentation-prose {
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.documentation-prose p + p {
+  margin-top: 1rem;
+}
+
+.documentation-prose p code,
+.documentation-reference code {
+  border-radius: 0.25rem;
+  background: var(--muted);
+  padding: 0.1rem 0.3rem;
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}
+
+.documentation-prose a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.developer-docs a:focus-visible,
+.developer-docs summary:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 3px;
+}
+
+.documentation-prose summary {
+  min-height: 44px;
+  padding-block: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.documentation-reference > div {
+  display: grid;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border);
+  padding-block: 0.75rem;
+}
+
+.documentation-reference dt {
+  font-weight: 500;
+}
+
+.documentation-reference dd {
+  color: var(--muted-foreground);
+}
+
+/* The response disclosure sits inside its code card's overflow-hidden box: keep its focus ring inside too. */
+.developer-docs .documentation-response summary:focus-visible {
+  outline-offset: -2px;
+}
+
+.documentation-prose .documentation-response summary {
+  padding-block: 0;
+  font-weight: 500;
+}

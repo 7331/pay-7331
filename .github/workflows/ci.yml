@@ -1,0 +1,193 @@
+name: CI
+
+# The pre-push gate of .pre-commit-config.yaml, run by hook id so the two cannot drift.
+# Every job runs on every pull request, so each required check always reports. The end-to-end scripts in
+# e2e/ stay out: they boot a fork stack and are run by hand when a change needs them.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SEMGREP_VERSION: "1.176.1"
+
+# A branch pushed again cancels its own older run.
+concurrency:
+  group: "ci-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      # Python and uv match backend/Dockerfile, so CI checks the interpreter and resolver the image ships.
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.19"
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
+          prune-cache: true
+          python-version: "3.15"
+      - name: Install dependencies (locked)
+        run: uvx pre-commit run --hook-stage pre-push --all-files backend-sync
+      - name: Ruff format check
+        run: uvx pre-commit run --hook-stage pre-push --all-files backend-format
+      - name: Ruff lint
+        run: uvx pre-commit run --hook-stage pre-push --all-files backend-lint
+      - name: ty
+        run: uvx pre-commit run --hook-stage pre-push --all-files backend-types
+      - name: Dead code (vulture)
+        run: uvx pre-commit run --hook-stage pre-push --all-files backend-dead-code
+      - name: Complexity gate (xenon)
+        run: uvx pre-commit run --hook-stage pre-push --all-files backend-complexity
+      # Self-test first: an invalid rule file prints nothing and exits 0, which looks like clean code. The
+      # fixtures hold one violation of every rule, so each declared rule id must appear among the findings, and the
+      # scan must report no parse or configuration error. No --error: findings are the expected outcome here.
+      - name: House rules, prove every rule fires
+        working-directory: backend
+        run: |
+          set -euo pipefail
+          ulimit -s unlimited 2>/dev/null || true
+          uvx "semgrep==${SEMGREP_VERSION}" scan --config semgrep/house-rules.yaml --metrics=off --quiet --json \
+            semgrep/tests/house_rules_bad.py semgrep/tests/bad_presenters.py semgrep/tests/typed_logging_bad.py \
+            > "$RUNNER_TEMP/house-rules-selftest.json"
+          REPORT="$RUNNER_TEMP/house-rules-selftest.json" python3 - <<'PY'
+          import json, os, pathlib, re, sys
+
+          declared = set(re.findall(r"^\s*-\s*id:\s*(\S+)", pathlib.Path("semgrep/house-rules.yaml").read_text(), re.M))
+          if not declared:
+              sys.exit("::error::No rule ids parsed out of house-rules.yaml: the ruleset is empty or unparseable.")
+          report = json.loads(pathlib.Path(os.environ["REPORT"]).read_text())
+          errors = report.get("errors") or []
+          if errors:
+              sys.exit(f"::error::Semgrep reported {len(errors)} error(s) on the self-test fixtures: {json.dumps(errors)}")
+          fired = {result["check_id"].rsplit(".", 1)[-1] for result in report["results"]}
+          missing = sorted(declared - fired)
+          if missing:
+              sys.exit(f"::error::These house rules found nothing in the known-bad fixtures: {', '.join(missing)}")
+          print(f"All {len(declared)} house rules fired on the fixtures.")
+          PY
+      - name: House rules, enforce
+        run: uvx pre-commit run --hook-stage pre-push --all-files backend-house-rules
+      - name: Import contracts
+        run: uvx pre-commit run --hook-stage pre-push --all-files backend-import-contracts
+      - name: Dependency check (deptry)
+        run: uvx pre-commit run --hook-stage pre-push --all-files backend-dependencies
+      - name: OpenAPI document is valid 3.1
+        run: uvx pre-commit run --hook-stage pre-push --all-files backend-openapi-valid
+
+  sdk-python:
+    name: Python SDK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.19"
+          enable-cache: true
+          cache-dependency-glob: "sdk/python/uv.lock"
+          prune-cache: true
+      - name: Ruff format check
+        run: uvx pre-commit run --hook-stage pre-push --all-files sdk-python-format
+      - name: Ruff lint
+        run: uvx pre-commit run --hook-stage pre-push --all-files sdk-python-lint
+      - name: ty
+        run: uvx pre-commit run --hook-stage pre-push --all-files sdk-python-types
+
+  contracts:
+    name: Contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.19"
+      # The forge this host runs (foundryup, ~/.foundry/bin).
+      - uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1.9.1
+        with:
+          version: v1.8.5
+      - name: forge fmt --check
+        run: uvx pre-commit run --hook-stage pre-push --all-files contracts-format
+      - name: forge build and test
+        run: uvx pre-commit run --hook-stage pre-push --all-files contracts-build-test
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      # The generated API types are checked against the backend's OpenAPI document, which uv dumps with the backend's
+      # locked dependencies on the Python backend/Dockerfile ships.
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.19"
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
+          prune-cache: true
+          python-version: "3.15"
+      # Node as backend/Dockerfile's frontend build stage; corepack runs the pnpm frontend/package.json pins
+      # (packageManager), the one the lockfile was written with.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "22"
+      - name: Enable corepack
+        run: corepack enable
+      - name: Install dependencies (frozen lockfile)
+        run: uvx pre-commit run --hook-stage pre-push --all-files frontend-dependencies
+      - name: Generated API types are current
+        run: uvx pre-commit run --hook-stage pre-push --all-files frontend-api-types-current
+      - name: tsc -b
+        run: uvx pre-commit run --hook-stage pre-push --all-files frontend-types
+      - name: oxlint
+        run: uvx pre-commit run --hook-stage pre-push --all-files frontend-lint
+      - name: Dead code (knip)
+        run: uvx pre-commit run --hook-stage pre-push --all-files frontend-dead-code
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.19"
+      - name: No Unicode dash or ellipsis
+        run: uvx pre-commit run --hook-stage pre-push --all-files docs-unicode-punctuation
+
+  workflows:
+    name: Workflows (zizmor)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # zizmor audits what review keeps missing: an action pinned to a movable tag, a `${{ }}` expanded into a run
+    # block, a checkout that leaves its credential in .git/config (https://docs.zizmor.sh/audits/).
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.19"
+      - name: Audit workflows
+        # Pinned like every other tool here; --persona=regular is zizmor's default posture.
+        run: uvx zizmor@1.30.1 --persona=regular --no-progress --strict-collection .github/workflows/

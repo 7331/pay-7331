@@ -1,0 +1,14 @@
+# The build context is the repository root; only backend/, frontend/ (built in the node stage) and the factory ABI go in.
+**/.git
+**/.venv
+**/__pycache__
+**/.ruff_cache
+**/.import_linter_cache
+**/.env
+contracts/lib
+contracts/out
+contracts/cache
+contracts/broadcast
+e2e
+frontend/node_modules
+frontend/dist

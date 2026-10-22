@@ -1,0 +1,12 @@
+# Weekly, Sunday 06:00 UTC.
+[Unit]
+Description=Weekly pay-7331 backup restore drill
+
+[Timer]
+OnCalendar=Sun *-*-* 06:00:00 UTC
+RandomizedDelaySec=10m
+Persistent=true
+Unit=pay-7331-backup-verify.service
+
+[Install]
+WantedBy=timers.target

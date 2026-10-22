@@ -1,0 +1,395 @@
+# House-style rules that ruff cannot express: typed log events, asyncio and httpx idioms, how models, services and
+# errors are shaped, and app state reached only through Resources. Pinned to semgrep 1.176.1 (SEMGREP_VERSION in .github/workflows/ci.yml).
+#
+# Scope discipline: everything here is a rule ruff has NO equivalent for. Idioms ruff already covers are
+# deliberately absent: `time.sleep` in async (ASYNC251), blocking `requests` in async (ASYNC210), and %/.format()
+# string building (UP031/UP032) are ruff's job.
+#
+# Directory scope: the hook and CI scan app/ and migrations/. The semgrep/tests/ fixtures are scanned on their own, by
+# CI's self-test, which requires every rule below to fire on them. Rule paths are unanchored (`app/**`, not `/app/**`):
+# a directory scan anchors a leading `/` at the git root.
+#
+# Paths: the logging module is app/shared/logging.py, the Resources classes are app/lifespan/resources.py's. Each
+# "existing violations" list names files that predate its rule. Those lists only shrink: a file is removed in the
+# change that fixes it, never added.
+# Run: `uvx pre-commit run --hook-stage pre-push --all-files backend-house-rules`.
+
+rules:
+  - id: typed-log-factory
+    languages: [python]
+    severity: ERROR
+    message: Application modules use app.shared.logging.get_logger.
+    paths:
+      include:
+        - app/**
+        - semgrep/tests/typed_logging_bad.py
+      exclude:
+        - app/shared/logging.py
+    patterns:
+      - pattern-either:
+          - pattern: structlog.get_logger(...)
+          - pattern: structlog.stdlib.get_logger(...)
+          - pattern: logging.getLogger(...)
+          - pattern: structlog.stdlib.BoundLogger(...)
+
+  - id: typed-log-emission
+    languages: [python]
+    severity: ERROR
+    message: Emit a LogEvent through app.shared.logging (log.emit, log.exception).
+    paths:
+      include:
+        - app/**
+        - semgrep/tests/typed_logging_bad.py
+      exclude:
+        - app/shared/logging.py
+    patterns:
+      - pattern: $LOGGER.$METHOD(...)
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: ^(debug|info|warning|warn|error|exception|critical|fatal|log|msg)$
+      - pattern-not: app.shared.logging.exception(...)
+      - pattern-not: $TASK.exception()
+
+  - id: typed-log-context
+    languages: [python]
+    severity: ERROR
+    message: Bind log context through app.shared.logging.bound_log_context and its validated LogContext.
+    paths:
+      include:
+        - app/**
+        - semgrep/tests/typed_logging_bad.py
+      exclude:
+        - app/shared/logging.py
+    patterns:
+      - pattern-either:
+          - pattern: structlog.contextvars.bind_contextvars(...)
+          - pattern: structlog.contextvars.bound_contextvars(...)
+          - pattern: $LOGGER.bind(...)
+          - pattern: $LOGGER.new(...)
+      # Native constructors are not logger context, even though the method spelling matches.
+      - pattern-not: PIL.Image.new(...)
+      - pattern-not: hmac.new(...)
+
+  - id: prefer-taskgroup-over-gather
+    languages: [python]
+    severity: WARNING
+    message: >-
+      asyncio.gather does not cancel siblings when one awaitable raises - the others keep running
+      unsupervised (verified on 3.13). Use `async with asyncio.TaskGroup() as tg` so a failure cancels
+      the group. gather is only correct when draining with return_exceptions=True.
+    patterns:
+      - pattern: asyncio.gather(...)
+      - pattern-not: asyncio.gather(..., return_exceptions=True)
+
+  - id: prefer-asyncio-timeout-over-wait-for
+    languages: [python]
+    severity: WARNING
+    message: >-
+      Prefer `async with asyncio.timeout(seconds):` over asyncio.wait_for - it composes with TaskGroup,
+      reads at the call site, and does not wrap the coroutine in a second future.
+    pattern: asyncio.wait_for(...)
+
+  - id: use-httpx-not-requests-or-aiohttp
+    languages: [python]
+    severity: ERROR
+    message: httpx is the one HTTP client - it covers sync and async with a single API. Do not add requests or aiohttp.
+    paths:
+      exclude:
+        # web3's AsyncHTTPProvider is aiohttp underneath, and the client catches the aiohttp.ClientResponseError it
+        # raises on a non-2xx status to read a 429's Retry-After. Moving to httpx means replacing web3's transport
+        # (single and batch requests, session handling) with our own, not swapping an import (2026-10-21).
+        - app/infrastructure/evm_rpc_api/client.py
+    pattern-either:
+      - pattern: import requests
+      - pattern: import aiohttp
+      - pattern: from requests import $X
+      - pattern: from aiohttp import $X
+
+  - id: no-dataclasses
+    languages: [python]
+    severity: ERROR
+    message: Value objects are frozen pydantic models, not dataclasses - validation and serialization come free.
+    pattern-either:
+      - pattern: import dataclasses
+      - pattern: from dataclasses import $X
+      - pattern: |
+          @dataclass
+          class $C: ...
+      - pattern: |
+          @dataclass(...)
+          class $C: ...
+
+  - id: no-namedtuple-bundles
+    languages: [python]
+    severity: ERROR
+    message: Grouped values are frozen Pydantic models, not NamedTuple bundles.
+    pattern: |
+      class $C(NamedTuple): ...
+
+  - id: services-never-keep-process-resources
+    languages: [python]
+    severity: ERROR
+    message: Services retain explicit collaborators, never a process's resources (app/lifespan/resources.py).
+    patterns:
+      - pattern-inside: |
+          class $C:
+            ...
+            def __init__(..., $RESOURCES: $RESOURCES_TYPE, ...):
+              ...
+      - pattern: self.$ATTRIBUTE = $RESOURCES
+      - metavariable-regex:
+          metavariable: $RESOURCES_TYPE
+          regex: ^(Store|Api|Watcher|CliInvoice)?Resources$
+
+  - id: runtime-checkable-needs-runtime-consumer
+    languages: [python]
+    severity: ERROR
+    message: Protocols stay static unless an evidenced isinstance or issubclass consumer requires runtime checks.
+    pattern: |
+      @runtime_checkable
+      class $C(...): ...
+
+  - id: no-staticmethod
+    languages: [python]
+    severity: ERROR
+    message: A @staticmethod is a module-level function wearing a class as a namespace. Move it out of the class.
+    pattern: |
+      @staticmethod
+      def $F(...): ...
+
+  - id: no-underscore-private-methods
+    languages: [python]
+    severity: ERROR
+    message: >-
+      No underscore-prefixed names as a privacy marker. Module layout and the public barrel express what is
+      internal. (The unused-parameter idiom `_user` is the one allowed use and is not matched here.)
+    patterns:
+      - pattern: |
+          def $F(self, ...): ...
+      - metavariable-regex:
+          metavariable: $F
+          regex: ^_(?!_).*
+
+  - id: no-httpexception-in-domain-code
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Domain code raises AppError subclasses, which carry a stable client `code` the exception handlers
+      (app/shared/exception_handlers.py) map. HTTPException bypasses them and produces an unversioned shape.
+    pattern-either:
+      - pattern: raise HTTPException(...)
+      - pattern: raise fastapi.HTTPException(...)
+
+  - id: no-model-dump-of-an-orm-row
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Responses are explicit field-by-field projections. model_dump() of an ORM row publishes whatever
+      columns exist today, so adding a private column silently puts it on the wire.
+    paths:
+      include: ["*presenters.py"]
+    pattern: $ROW.model_dump(...)
+
+  - id: no-exception-text-in-raised-errors
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Never copy an exception's string representation into another raised error. Validation and
+      dependency exceptions may contain submitted values, schema internals, SQL, or library details.
+      Raise an explicit client-safe message and keep the original exception only as the cause.
+    pattern: raise $ERROR(str($EXCEPTION))
+
+  - id: app-state-through-resources
+    languages: [python]
+    severity: ERROR
+    message: >-
+      A process's clients live on its resources: read them through app.lifespan.dependencies.resources_of (or
+      ResourcesDependency). Only a lifespan installs them, as app.state.resources; nothing else touches
+      app.state, so a missing or misspelled resource fails the type checker, not a request.
+    paths:
+      include:
+        - app/**
+        - semgrep/tests/house_rules_bad.py
+      exclude:
+        - app/lifespan/dependencies.py
+    patterns:
+      - pattern: $APP.state
+      - pattern-not-inside: $APP.state.resources = $RESOURCES
+      - metavariable-regex:
+          metavariable: $APP
+          regex: ^(.*\.)?[a-z_]*app$
+
+  # Model and type rules.
+
+  - id: no-model-copy-update
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Build the new value with a keyword constructor (or a method on the model that does). Neither ty nor
+      Pydantic checks a model_copy update dict, so a renamed or mistyped field passes silently.
+    pattern: $MODEL.model_copy(..., update=$UPDATE, ...)
+
+  - id: no-include-exclude-on-wire-output
+    languages: [python]
+    severity: ERROR
+    message: >-
+      A different shape is a different model: no call-site include= or exclude= on model_dump or
+      model_dump_json (https://fastapi.tiangolo.com/tutorial/response-model/#response-model-include-and-response-model-exclude).
+      exclude_unset, exclude_defaults and exclude_none stay allowed.
+    patterns:
+      - pattern-either:
+          - pattern: $MODEL.$DUMP(..., include=$FIELDS, ...)
+          - pattern: $MODEL.$DUMP(..., exclude=$FIELDS, ...)
+      - metavariable-regex:
+          metavariable: $DUMP
+          regex: ^model_dump(_json)?$
+
+  - id: no-isinstance-json-parsing
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Validate outside data into a Pydantic model (model_validate_json, TypeAdapter) instead of hand-parsing it
+      with isinstance checks on builtins.
+    paths:
+      exclude:
+        # existing violations at the port (2026-10-21); this list only shrinks
+        - app/infrastructure/deposit_factory_api/client.py
+        - app/infrastructure/evm_rpc_api/client.py
+        - app/infrastructure/ip_api/client.py
+        - app/payments/account_webhooks/discord_delivery.py
+        - app/payments/account_webhooks/discord_messages.py
+        - app/payments/account_webhooks/service.py
+        - app/payments/accounts/service.py
+        - app/payments/chains/configuration.py
+        - app/payments/invoices/deposit_recovery_service.py
+        - app/payments/settlements/treasury_service.py
+        - app/payments/sign_up_screening/store.py
+        - app/shared/logging.py
+    patterns:
+      - pattern-either:
+          - pattern: isinstance($VALUE, $TYPE)
+          - pattern: isinstance($VALUE, (..., $TYPE, ...))
+      - metavariable-regex:
+          metavariable: $TYPE
+          regex: ^(dict|list|str|int|float|bool|bytes|set|tuple)$
+
+  - id: no-type-dispatch-on-own-classes
+    languages: [python]
+    severity: ERROR
+    message: >-
+      No type dispatch on our own classes: put the behaviour on the class as a method or property, or let a
+      Pydantic discriminator pick the class (https://refactoring.com/catalog/replaceConditionalWithPolymorphism.html).
+      Exception chains are a boundary we do not own, so *Error and *Exception classes are not matched.
+    paths:
+      exclude:
+        # existing violations at the port (2026-10-21); this list only shrinks
+        - app/cli.py
+        - app/cli_operator_keys.py
+        - app/infrastructure/evm_rpc_api/client.py
+        - app/lifespan/composition.py
+        - app/payments/account_events/router.py
+        - app/payments/accounts/preferences_service.py
+        - app/payments/chain_watcher/reconciliation_service.py
+        - app/payments/chains/service.py
+        - app/payments/invoice_schedules/router.py
+        - app/payments/invoice_schedules/service.py
+        - app/payments/invoices/invoice_creation.py
+        - app/payments/invoices/invoice_export_service.py
+        - app/payments/invoices/offered_chains.py
+        - app/payments/invoices/payment_checks_service.py
+        - app/payments/invoices/payment_uris.py
+        - app/payments/invoices/presenters.py
+        - app/payments/invoices/router.py
+        - app/payments/invoices/service.py
+        - app/payments/invoices/transaction_readings.py
+        - app/payments/payment_links/router.py
+        - app/payments/payment_links/service.py
+        - app/watcher_healthcheck.py
+    # `case C(...)` class patterns are not covered: semgrep 1.176.1 cannot parse `(...)` or `$...ARGS`
+    # inside a class pattern, so a rule would only see exact argument lists.
+    patterns:
+      - pattern-either:
+          - pattern: isinstance($VALUE, $CLASS)
+          - pattern: isinstance($VALUE, (..., $CLASS, ...))
+      - pattern-either:
+          - patterns:
+              - pattern-inside: |
+                  from $MODULE import $CLASS
+                  ...
+              - metavariable-regex:
+                  metavariable: $MODULE
+                  regex: ^app(\.|$)
+          # A class of the same module, defined above or below the check.
+          - pattern-inside: |
+              class $CLASS(...):
+                ...
+              ...
+          - pattern-inside: |
+              $STATEMENT
+              ...
+              class $CLASS(...):
+                ...
+      - metavariable-regex:
+          metavariable: $CLASS
+          regex: ^(?!.*(Error|Exception)$)
+
+  - id: closed-sets-are-enums
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Closed sets are enums: a Literal with two or more string values is a StrEnum. One-value tags and
+      Literal[Enum.MEMBER, ...] subsets stay allowed.
+    paths:
+      exclude:
+        # existing violations at the port (2026-10-21); this list only shrinks
+        - app/config.py
+        - app/payments/accounts/types.py
+        - app/payments/chains/types.py
+        - app/payments/invoices/schemas.py
+    pattern-either:
+      - pattern: typing.Literal[..., "$FIRST", ..., "$SECOND", ...]
+      - pattern: typing_extensions.Literal[..., "$FIRST", ..., "$SECOND", ...]
+
+  - id: no-hand-made-decorators
+    languages: [python]
+    severity: ERROR
+    message: >-
+      No hand-made decorators: every decorator here is a library's own documented API. Write the wrapped
+      behaviour as a plain call at the site that needs it.
+    pattern-either:
+      - pattern: from functools import wraps
+      - pattern: functools.wraps(...)
+      - pattern: functools.update_wrapper(...)
+
+  - id: no-from-attributes
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Build our own models with keyword constructors, which ty checks; from_attributes hides every field
+      from the checker. model_validate reads only outside data.
+    paths:
+      include:
+        - app/**
+        - semgrep/tests/house_rules_bad.py
+    pattern-either:
+      - pattern: ConfigDict(..., from_attributes=$VALUE, ...)
+      - pattern: $MODEL.model_validate(..., from_attributes=$VALUE, ...)
+
+  - id: wire-models-are-named-response-not-view
+    languages: [python]
+    severity: ERROR
+    message: >-
+      A pydantic model a route returns, or a list or page item of one, is named <Thing>Response; a part nested in
+      a response is named for the part (InvoiceFiat). Never <Thing>View.
+    paths:
+      include:
+        - app/**
+        - semgrep/tests/house_rules_bad.py
+      # existing violations: none; this list stays empty
+      exclude: []
+    patterns:
+      - pattern: |
+          class $MODEL(...): ...
+      - metavariable-regex:
+          metavariable: $MODEL
+          regex: ^.*View$

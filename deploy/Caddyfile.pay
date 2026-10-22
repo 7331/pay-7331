@@ -1,0 +1,18 @@
+# Example Caddy site block for production: the reverse proxy in front of the API container (Compose project
+# pay-7331), on the shared proxy network. Set up TLS and security headers the way your proxy does.
+# X-Real-IP carries Caddy's resolved client IP ({client_ip}; behind a CDN, list the CDN's ranges in the global
+# `trusted_proxies` option so it is the real client). The API trusts X-Real-IP only from the addresses in
+# PAY_TRUSTED_PROXY_ADDRESSES, so give the proxy a fixed address on that network and list it there; it is used for rate
+# limits and sign-up screening. Bodies over 64KB get 413 before the API parses any JSON: FastAPI reads the whole body
+# before the session check.
+pay.example.com {
+	# tls ...           your certificate setup
+	# header { ... }    your security headers
+	encode zstd gzip
+	request_body {
+		max_size 64KB
+	}
+	reverse_proxy pay-7331-api:8000 {
+		header_up X-Real-IP {client_ip}
+	}
+}

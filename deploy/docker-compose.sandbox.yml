@@ -1,0 +1,46 @@
+# pay-sandbox.7331.org: the testnet sandbox's override of the root docker-compose.yml, Compose project
+# `pay-7331-sandbox` (PLAN.md section 16). Run it through deploy/deploy_sandbox.sh, which passes --env-file
+# "$PAY_SANDBOX_ENVIRONMENT_FILE" (never in git) for interpolation and exports the deploy/host_paths.env variables.
+# Its own containers, image tag, networks and Postgres volume (Compose prefixes them with the project name), so nothing
+# here touches the production project `pay-7331`. No WAL archive and no backups: testnet data, and the docs say so.
+# The reverse proxy reaches pay-7331-sandbox-api:8000 over the shared proxy network (deploy/Caddyfile.pay-sandbox); no
+# host port.
+name: pay-7331-sandbox
+
+x-sandbox-application: &sandbox-application
+  # Its own tag, so a sandbox build never replaces the image production restarts from.
+  image: pay-7331-backend:sandbox
+  mem_limit: 512m
+  env_file: !override [{ path: "${PAY_SANDBOX_ENVIRONMENT_FILE:?}", required: true }]
+  logging: &sandbox-logging
+    driver: json-file
+    options: { max-size: 10m, max-file: "3" }
+
+services:
+  postgres:
+    container_name: pay-7331-sandbox-postgres
+    mem_limit: 512m
+    logging: *sandbox-logging
+
+  redis:
+    container_name: pay-7331-sandbox-redis
+    logging: *sandbox-logging
+
+  migrate:
+    <<: *sandbox-application
+    container_name: pay-7331-sandbox-migrate
+
+  api:
+    <<: *sandbox-application
+    container_name: pay-7331-sandbox-api
+    ports: !reset []
+    networks: [internal, egress, reverse_proxy]
+
+  watcher:
+    <<: *sandbox-application
+    container_name: pay-7331-sandbox-watcher
+
+networks:
+  reverse_proxy:
+    name: "${PAY_REVERSE_PROXY_NETWORK:?}"
+    external: true

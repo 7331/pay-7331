@@ -1,0 +1,14 @@
+# Example Caddy site block for the testnet sandbox (Compose project pay-7331-sandbox, PLAN.md section 16), beside the
+# production one (deploy/Caddyfile.pay), on the same shared proxy network. X-Real-IP as on production: the API trusts it
+# only from PAY_TRUSTED_PROXY_ADDRESSES. Bodies over 64KB get 413 before the API parses them.
+pay-sandbox.example.com {
+	# tls ...           your certificate setup
+	# header { ... }    your security headers
+	encode zstd gzip
+	request_body {
+		max_size 64KB
+	}
+	reverse_proxy pay-7331-sandbox-api:8000 {
+		header_up X-Real-IP {client_ip}
+	}
+}

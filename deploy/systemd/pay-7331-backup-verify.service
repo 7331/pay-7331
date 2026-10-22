@@ -1,0 +1,29 @@
+# Weekly restore drill: the newest backup into a throwaway postgres:18 container with no network, checked
+# against production, then removed (deploy/verify_postgres_backup_restore.sh). Only reads the bucket and
+# production.
+[Unit]
+Description=Restore the newest pay-7331 backup into a throwaway Postgres and check it
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# The host paths the script needs (deploy/systemd/backup.env.example).
+EnvironmentFile=/etc/pay-7331/backup.env
+ExecStart=/opt/pay-7331-backup/verify_postgres_backup_restore.sh
+TimeoutStartSec=30min
+# One daemon.err journal line and /var/lib/pay-7331/backup-verify-failed when the drill does not pass; a passing
+# drill removes the marker. Then the operator hears of it: an operator.alert `backup_restore_drill_failed` on the
+# operator's account, pushed to their devices. $SERVICE_RESULT,
+# $EXIT_CODE and $EXIT_STATUS are what systemd hands ExecStopPost=
+# (https://github.com/systemd/systemd/blob/main/man/systemd.exec.xml).
+ExecStopPost=/bin/sh -c 'mkdir -p /var/lib/pay-7331; \
+  if [ "$$SERVICE_RESULT" = success ]; then rm -f /var/lib/pay-7331/backup-verify-failed; exit 0; fi; \
+  printf "result=%s exit=%s status=%s at=%s\\n" "$$SERVICE_RESULT" "$$EXIT_CODE" "$$EXIT_STATUS" \
+    "$$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)" > /var/lib/pay-7331/backup-verify-failed; \
+  chmod 0600 /var/lib/pay-7331/backup-verify-failed; \
+  logger -t pay-7331-backup -p daemon.err "backup restore drill did not pass; see /var/lib/pay-7331/backup-verify-failed"'
+ExecStopPost=/bin/sh -c '[ "$$SERVICE_RESULT" = success ] && exit 0; \
+  detail="result=$${SERVICE_RESULT:-unknown} code=$${EXIT_CODE:-unknown} status=$${EXIT_STATUS:-unknown}"; \
+  exec docker exec pay-7331-api python -m app.cli record-operator-alert --kind backup_restore_drill_failed \
+    --detail "$$detail"'

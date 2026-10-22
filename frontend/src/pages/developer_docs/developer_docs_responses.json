@@ -1,0 +1,2741 @@
+{
+  "create_invoice": {
+    "id": "inv_89ABCDEFGHJKLMNPQRSTUV",
+    "url": "https://pay.7331.org/i/inv_89ABCDEFGHJKLMNPQRSTUV",
+    "status": "awaiting_asset",
+    "partial": false,
+    "late_payment": false,
+    "sweep_blocked": false,
+    "chain": {
+      "key": "polygon",
+      "name": "Polygon",
+      "kind": "evm",
+      "chain_id": 137,
+      "explorer_url": "https://polygonscan.com",
+      "expected_finality_seconds": 5,
+      "confirmations_final": null
+    },
+    "asset": null,
+    "assets": [
+      "POL",
+      "USDC",
+      "USDT"
+    ],
+    "payment_options": [
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "POL",
+          "name": "Polygon Ecosystem Token",
+          "decimals": 18,
+          "token_address": null
+        },
+        "amount": "52.8238"
+      },
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "amount": "5"
+      },
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDT",
+          "name": "Tether USD",
+          "decimals": 6,
+          "token_address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
+        },
+        "amount": "5"
+      }
+    ],
+    "deposit_address": null,
+    "amount_due": null,
+    "amount_received": null,
+    "amount_remaining": null,
+    "fiat": {
+      "currency": "USD",
+      "amount": "5.00",
+      "usd": "5.00",
+      "eur": "4.45"
+    },
+    "quote": null,
+    "note": "",
+    "return_url": null,
+    "success_url": null,
+    "expires_at": "2026-10-23T12:30:24Z",
+    "underpaid_open_until": null,
+    "payment_uri": null,
+    "payments": [],
+    "sweeps": [],
+    "refunds": [],
+    "refund_offer": {
+      "available": false,
+      "reason": "not_overpaid",
+      "senders": []
+    },
+    "stray_payments": [],
+    "seen": false,
+    "confirmations": null,
+    "confirmations_final": null,
+    "seller_support_contact": null,
+    "created_at": "2026-10-23T12:00:24Z",
+    "updated_at": "2026-10-23T12:00:24Z",
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "order_id": null,
+    "metadata": null,
+    "accuracy_percent": "1",
+    "payment_link_id": null,
+    "invoice_schedule_id": null,
+    "invoice_schedule_period_start": null,
+    "paid_at": null,
+    "callback_url": null,
+    "refreshed_from_invoice_id": null,
+    "refreshed_into_invoice_id": null,
+    "monero": null
+  },
+  "choose_payment_pair": {
+    "id": "inv_89ABCDEFGHJKLMNPQRSTUV",
+    "url": "https://pay.7331.org/i/inv_89ABCDEFGHJKLMNPQRSTUV",
+    "status": "awaiting_payment",
+    "partial": false,
+    "late_payment": false,
+    "sweep_blocked": false,
+    "chain": {
+      "key": "polygon",
+      "name": "Polygon",
+      "kind": "evm",
+      "chain_id": 137,
+      "explorer_url": "https://polygonscan.com",
+      "expected_finality_seconds": 5,
+      "confirmations_final": null
+    },
+    "asset": {
+      "symbol": "USDC",
+      "name": "USD Coin",
+      "decimals": 6,
+      "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+    },
+    "assets": [
+      "POL",
+      "USDC",
+      "USDT"
+    ],
+    "payment_options": [],
+    "deposit_address": "0x0202020202020202020202020202020202020202",
+    "amount_due": "5",
+    "amount_received": "0",
+    "amount_remaining": "5",
+    "fiat": {
+      "currency": "USD",
+      "amount": "5.00",
+      "usd": "5.00",
+      "eur": "4.45"
+    },
+    "quote": {
+      "asset_price_usd": "1",
+      "expires_at": "2026-10-23T12:30:30Z"
+    },
+    "note": "",
+    "return_url": null,
+    "success_url": null,
+    "expires_at": "2026-10-23T12:30:30Z",
+    "underpaid_open_until": null,
+    "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0202020202020202020202020202020202020202&uint256=5000000",
+    "payments": [],
+    "sweeps": [],
+    "refunds": [],
+    "refund_offer": {
+      "available": false,
+      "reason": "not_overpaid",
+      "senders": []
+    },
+    "stray_payments": [],
+    "seen": false,
+    "confirmations": null,
+    "confirmations_final": null,
+    "seller_support_contact": null,
+    "created_at": "2026-10-23T12:00:24Z",
+    "updated_at": "2026-10-23T12:00:30Z"
+  },
+  "find_order": {
+    "invoices": [
+      {
+        "id": "inv_FGHJKLMNPQRSTUVWXYZabc",
+        "url": "https://pay.7331.org/i/inv_FGHJKLMNPQRSTUVWXYZabc",
+        "status": "paid",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0303030303030303030303030303030303030303",
+        "amount_due": "5",
+        "amount_received": "5",
+        "amount_remaining": "0",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.45"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T12:29:07Z"
+        },
+        "note": "Premium plan, 1 month",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T12:29:07Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0303030303030303030303030303030303030303&uint256=0",
+        "payments": [
+          {
+            "tx_hash": "0x0101010101010101010101010101010101010101010101010101010101010101",
+            "sender": "0x0404040404040404040404040404040404040404",
+            "amount": "5",
+            "block_number": 95951791,
+            "final": true
+          }
+        ],
+        "sweeps": [
+          {
+            "tx_hash": "0x0202020202020202020202020202020202020202020202020202020202020202",
+            "asset_symbol": "USDC",
+            "amount": "5",
+            "status": "final"
+          }
+        ],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "not_overpaid",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:59:07Z",
+        "updated_at": "2026-10-23T11:59:16Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "customer-77:order-1042",
+        "metadata": {
+          "customer_id": 77
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": null,
+        "invoice_schedule_period_start": null,
+        "paid_at": "2026-10-23T11:59:11Z",
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      }
+    ],
+    "next_cursor": null
+  },
+  "list_customer_invoices": {
+    "invoices": [
+      {
+        "id": "inv_FGHJKLMNPQRSTUVWXYZabc",
+        "url": "https://pay.7331.org/i/inv_FGHJKLMNPQRSTUVWXYZabc",
+        "status": "paid",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0303030303030303030303030303030303030303",
+        "amount_due": "5",
+        "amount_received": "5",
+        "amount_remaining": "0",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.45"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T12:29:07Z"
+        },
+        "note": "Premium plan, 1 month",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T12:29:07Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0303030303030303030303030303030303030303&uint256=0",
+        "payments": [
+          {
+            "tx_hash": "0x0101010101010101010101010101010101010101010101010101010101010101",
+            "sender": "0x0404040404040404040404040404040404040404",
+            "amount": "5",
+            "block_number": 95951791,
+            "final": true
+          }
+        ],
+        "sweeps": [
+          {
+            "tx_hash": "0x0202020202020202020202020202020202020202020202020202020202020202",
+            "asset_symbol": "USDC",
+            "amount": "5",
+            "status": "final"
+          }
+        ],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "not_overpaid",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:59:07Z",
+        "updated_at": "2026-10-23T11:59:16Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "customer-77:order-1042",
+        "metadata": {
+          "customer_id": 77
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": null,
+        "invoice_schedule_period_start": null,
+        "paid_at": "2026-10-23T11:59:11Z",
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      }
+    ],
+    "next_cursor": null
+  },
+  "list_chains": {
+    "chains": [
+      {
+        "key": "polygon",
+        "name": "Polygon",
+        "kind": "evm",
+        "chain_id": 137,
+        "explorer_url": "https://polygonscan.com",
+        "expected_finality_seconds": 5,
+        "confirmations_final": null,
+        "assets": [
+          {
+            "symbol": "POL",
+            "name": "Polygon Ecosystem Token",
+            "decimals": 18,
+            "token_address": null
+          },
+          {
+            "symbol": "USDC",
+            "name": "USD Coin",
+            "decimals": 6,
+            "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+          },
+          {
+            "symbol": "USDT",
+            "name": "Tether USD",
+            "decimals": 6,
+            "token_address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
+          },
+          {
+            "symbol": "USDC.e",
+            "name": "USD Coin (PoS)",
+            "decimals": 6,
+            "token_address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+          },
+          {
+            "symbol": "WETH",
+            "name": "Wrapped Ether",
+            "decimals": 18,
+            "token_address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619"
+          },
+          {
+            "symbol": "WBTC",
+            "name": "Wrapped BTC",
+            "decimals": 8,
+            "token_address": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6"
+          },
+          {
+            "symbol": "DAI",
+            "name": "Dai Stablecoin",
+            "decimals": 18,
+            "token_address": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063"
+          },
+          {
+            "symbol": "LINK",
+            "name": "Chainlink",
+            "decimals": 18,
+            "token_address": "0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39"
+          },
+          {
+            "symbol": "AAVE",
+            "name": "Aave",
+            "decimals": 18,
+            "token_address": "0xD6DF932A45C0f255f85145f286eA0b292B21C90B"
+          },
+          {
+            "symbol": "UNI",
+            "name": "Uniswap",
+            "decimals": 18,
+            "token_address": "0xb33EaAd8d922B1083446DC23f610c2567fB5180f"
+          }
+        ],
+        "default_accepted_assets": [
+          "POL",
+          "USDC",
+          "USDT"
+        ]
+      }
+    ]
+  },
+  "cancel_invoice": {
+    "id": "inv_NPQRSTUVWXYZabcdefghij",
+    "url": "https://pay.7331.org/i/inv_NPQRSTUVWXYZabcdefghij",
+    "status": "cancelled",
+    "partial": false,
+    "late_payment": false,
+    "sweep_blocked": false,
+    "chain": {
+      "key": "polygon",
+      "name": "Polygon",
+      "kind": "evm",
+      "chain_id": 137,
+      "explorer_url": "https://polygonscan.com",
+      "expected_finality_seconds": 5,
+      "confirmations_final": null
+    },
+    "asset": null,
+    "assets": [
+      "POL",
+      "USDC",
+      "USDT"
+    ],
+    "payment_options": [],
+    "deposit_address": null,
+    "amount_due": null,
+    "amount_received": null,
+    "amount_remaining": null,
+    "fiat": {
+      "currency": "USD",
+      "amount": "5.00",
+      "usd": "5.00",
+      "eur": "4.45"
+    },
+    "quote": null,
+    "note": "",
+    "return_url": null,
+    "success_url": null,
+    "expires_at": "2026-10-23T12:30:30Z",
+    "underpaid_open_until": null,
+    "payment_uri": null,
+    "payments": [],
+    "sweeps": [],
+    "refunds": [],
+    "refund_offer": {
+      "available": false,
+      "reason": "not_overpaid",
+      "senders": []
+    },
+    "stray_payments": [],
+    "seen": false,
+    "confirmations": null,
+    "confirmations_final": null,
+    "seller_support_contact": null,
+    "created_at": "2026-10-23T12:00:30Z",
+    "updated_at": "2026-10-23T12:00:30Z",
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "order_id": null,
+    "metadata": null,
+    "accuracy_percent": "1",
+    "payment_link_id": null,
+    "invoice_schedule_id": null,
+    "invoice_schedule_period_start": null,
+    "paid_at": null,
+    "callback_url": null,
+    "refreshed_from_invoice_id": null,
+    "refreshed_into_invoice_id": null,
+    "monero": null
+  },
+  "refresh_expired_order": {
+    "id": "inv_VWXYZabcdefghijkmnopqr",
+    "url": "https://pay.7331.org/i/inv_VWXYZabcdefghijkmnopqr",
+    "status": "awaiting_asset",
+    "partial": false,
+    "late_payment": false,
+    "sweep_blocked": false,
+    "chain": {
+      "key": "polygon",
+      "name": "Polygon",
+      "kind": "evm",
+      "chain_id": 137,
+      "explorer_url": "https://polygonscan.com",
+      "expected_finality_seconds": 5,
+      "confirmations_final": null
+    },
+    "asset": null,
+    "assets": [
+      "POL",
+      "USDC",
+      "USDT"
+    ],
+    "payment_options": [
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "POL",
+          "name": "Polygon Ecosystem Token",
+          "decimals": 18,
+          "token_address": null
+        },
+        "amount": "52.8238"
+      },
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "amount": "5"
+      },
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDT",
+          "name": "Tether USD",
+          "decimals": 6,
+          "token_address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
+        },
+        "amount": "5"
+      }
+    ],
+    "deposit_address": null,
+    "amount_due": null,
+    "amount_received": null,
+    "amount_remaining": null,
+    "fiat": {
+      "currency": "USD",
+      "amount": "5.00",
+      "usd": "5.00",
+      "eur": "4.45"
+    },
+    "quote": null,
+    "note": "",
+    "return_url": null,
+    "success_url": null,
+    "expires_at": "2026-10-23T12:30:32Z",
+    "underpaid_open_until": null,
+    "payment_uri": null,
+    "payments": [],
+    "sweeps": [],
+    "refunds": [],
+    "refund_offer": {
+      "available": false,
+      "reason": "not_overpaid",
+      "senders": []
+    },
+    "stray_payments": [],
+    "seen": false,
+    "confirmations": null,
+    "confirmations_final": null,
+    "seller_support_contact": null,
+    "created_at": "2026-10-23T12:00:31Z",
+    "updated_at": "2026-10-23T12:00:31Z",
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "order_id": "order-1042",
+    "metadata": null,
+    "accuracy_percent": "1",
+    "payment_link_id": null,
+    "invoice_schedule_id": null,
+    "invoice_schedule_period_start": null,
+    "paid_at": null,
+    "callback_url": null,
+    "refreshed_from_invoice_id": "inv_cdefghijkmnopqrstuvwxy",
+    "refreshed_into_invoice_id": null,
+    "monero": null
+  },
+  "shop_links_and_callback": {
+    "id": "inv_jkmnopqrstuvwxyz123456",
+    "url": "https://pay.7331.org/i/inv_jkmnopqrstuvwxyz123456",
+    "status": "awaiting_asset",
+    "partial": false,
+    "late_payment": false,
+    "sweep_blocked": false,
+    "chain": {
+      "key": "polygon",
+      "name": "Polygon",
+      "kind": "evm",
+      "chain_id": 137,
+      "explorer_url": "https://polygonscan.com",
+      "expected_finality_seconds": 5,
+      "confirmations_final": null
+    },
+    "asset": null,
+    "assets": [
+      "POL",
+      "USDC",
+      "USDT"
+    ],
+    "payment_options": [
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "POL",
+          "name": "Polygon Ecosystem Token",
+          "decimals": 18,
+          "token_address": null
+        },
+        "amount": "52.8238"
+      },
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "amount": "5"
+      },
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDT",
+          "name": "Tether USD",
+          "decimals": 6,
+          "token_address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
+        },
+        "amount": "5"
+      }
+    ],
+    "deposit_address": null,
+    "amount_due": null,
+    "amount_received": null,
+    "amount_remaining": null,
+    "fiat": {
+      "currency": "USD",
+      "amount": "5.00",
+      "usd": "5.00",
+      "eur": "4.45"
+    },
+    "quote": null,
+    "note": "",
+    "return_url": "https://shop.example/cart",
+    "success_url": "https://shop.example/thanks",
+    "expires_at": "2026-10-23T12:30:32Z",
+    "underpaid_open_until": null,
+    "payment_uri": null,
+    "payments": [],
+    "sweeps": [],
+    "refunds": [],
+    "refund_offer": {
+      "available": false,
+      "reason": "not_overpaid",
+      "senders": []
+    },
+    "stray_payments": [],
+    "seen": false,
+    "confirmations": null,
+    "confirmations_final": null,
+    "seller_support_contact": null,
+    "created_at": "2026-10-23T12:00:32Z",
+    "updated_at": "2026-10-23T12:00:32Z",
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "order_id": "order-1043",
+    "metadata": null,
+    "accuracy_percent": "1",
+    "payment_link_id": null,
+    "invoice_schedule_id": null,
+    "invoice_schedule_period_start": null,
+    "paid_at": null,
+    "callback_url": "https://shop.example/pay-events",
+    "refreshed_from_invoice_id": null,
+    "refreshed_into_invoice_id": null,
+    "monero": null
+  },
+  "list_invoice_events": {
+    "events": [
+      {
+        "id": "evt_rstuvwxyz123456789ABCD",
+        "type": "invoice.expired",
+        "invoice_id": "inv_cdefghijkmnopqrstuvwxy",
+        "created_at": "2026-10-23T12:00:31Z",
+        "data": {
+          "id": "inv_cdefghijkmnopqrstuvwxy",
+          "url": "https://pay.7331.org/i/inv_cdefghijkmnopqrstuvwxy",
+          "fiat": {
+            "eur": "4.45",
+            "usd": "5.00",
+            "amount": "5.00",
+            "currency": "USD"
+          },
+          "note": "",
+          "seen": false,
+          "asset": null,
+          "chain": {
+            "key": "polygon",
+            "kind": "evm",
+            "name": "Polygon",
+            "chain_id": 137,
+            "explorer_url": "https://polygonscan.com",
+            "confirmations_final": null,
+            "expected_finality_seconds": 5
+          },
+          "quote": null,
+          "assets": [
+            "POL",
+            "USDC",
+            "USDT"
+          ],
+          "monero": null,
+          "status": "expired",
+          "sweeps": [],
+          "paid_at": null,
+          "partial": false,
+          "refunds": [],
+          "metadata": null,
+          "order_id": "order-1042",
+          "payments": [],
+          "amount_due": null,
+          "created_at": "2026-10-23T12:00:30Z",
+          "expires_at": "2026-10-23T12:00:29Z",
+          "return_url": null,
+          "updated_at": "2026-10-23T12:00:31Z",
+          "payment_uri": null,
+          "success_url": null,
+          "callback_url": null,
+          "late_payment": false,
+          "refund_offer": {
+            "reason": "not_overpaid",
+            "senders": [],
+            "available": false
+          },
+          "confirmations": null,
+          "sweep_blocked": false,
+          "stray_payments": [],
+          "amount_received": null,
+          "deposit_address": null,
+          "payment_link_id": null,
+          "payment_options": [],
+          "accuracy_percent": "1",
+          "amount_remaining": null,
+          "confirmations_final": null,
+          "destination_address": "0x0101010101010101010101010101010101010101",
+          "invoice_schedule_id": null,
+          "underpaid_open_until": null,
+          "seller_support_contact": null,
+          "refreshed_from_invoice_id": null,
+          "refreshed_into_invoice_id": null,
+          "invoice_schedule_period_start": null
+        }
+      },
+      {
+        "id": "evt_yz123456789ABCDEFGHJKL",
+        "type": "invoice.cancelled",
+        "invoice_id": "inv_NPQRSTUVWXYZabcdefghij",
+        "created_at": "2026-10-23T12:00:30Z",
+        "data": {
+          "id": "inv_NPQRSTUVWXYZabcdefghij",
+          "url": "https://pay.7331.org/i/inv_NPQRSTUVWXYZabcdefghij",
+          "fiat": {
+            "eur": "4.45",
+            "usd": "5.00",
+            "amount": "5.00",
+            "currency": "USD"
+          },
+          "note": "",
+          "seen": false,
+          "asset": null,
+          "chain": {
+            "key": "polygon",
+            "kind": "evm",
+            "name": "Polygon",
+            "chain_id": 137,
+            "explorer_url": "https://polygonscan.com",
+            "confirmations_final": null,
+            "expected_finality_seconds": 5
+          },
+          "quote": null,
+          "assets": [
+            "POL",
+            "USDC",
+            "USDT"
+          ],
+          "monero": null,
+          "status": "cancelled",
+          "sweeps": [],
+          "paid_at": null,
+          "partial": false,
+          "refunds": [],
+          "metadata": null,
+          "order_id": null,
+          "payments": [],
+          "amount_due": null,
+          "created_at": "2026-10-23T12:00:30Z",
+          "expires_at": "2026-10-23T12:30:30Z",
+          "return_url": null,
+          "updated_at": "2026-10-23T12:00:30Z",
+          "payment_uri": null,
+          "success_url": null,
+          "callback_url": null,
+          "late_payment": false,
+          "refund_offer": {
+            "reason": "not_overpaid",
+            "senders": [],
+            "available": false
+          },
+          "confirmations": null,
+          "sweep_blocked": false,
+          "stray_payments": [],
+          "amount_received": null,
+          "deposit_address": null,
+          "payment_link_id": null,
+          "payment_options": [],
+          "accuracy_percent": "1",
+          "amount_remaining": null,
+          "confirmations_final": null,
+          "destination_address": "0x0101010101010101010101010101010101010101",
+          "invoice_schedule_id": null,
+          "underpaid_open_until": null,
+          "seller_support_contact": null,
+          "refreshed_from_invoice_id": null,
+          "refreshed_into_invoice_id": null,
+          "invoice_schedule_period_start": null
+        }
+      }
+    ],
+    "next_cursor": null
+  },
+  "create_payment_link": {
+    "id": "lnk_6789ABCDEFGHJKLMNPQRST",
+    "url": "https://pay.7331.org/l/lnk_6789ABCDEFGHJKLMNPQRST",
+    "status": "open",
+    "quantity": 10,
+    "slots_left": 10,
+    "chain": {
+      "key": "polygon",
+      "name": "Polygon",
+      "kind": "evm",
+      "chain_id": 137,
+      "explorer_url": "https://polygonscan.com",
+      "expected_finality_seconds": 5,
+      "confirmations_final": null
+    },
+    "assets": [
+      "USDC",
+      "POL"
+    ],
+    "payment_options": [
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "amount": "5"
+      },
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "POL",
+          "name": "Polygon Ecosystem Token",
+          "decimals": 18,
+          "token_address": null
+        },
+        "amount": "52.8238"
+      }
+    ],
+    "fiat": {
+      "currency": "USD",
+      "amount": "5.00",
+      "usd": "5.00",
+      "eur": "4.45"
+    },
+    "note": "",
+    "created_at": "2026-10-23T12:00:32Z",
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "lifetime_seconds": 1800,
+    "accuracy_percent": "1",
+    "return_url": null,
+    "slots_held": 0,
+    "paid_count": 0,
+    "closed_at": null
+  },
+  "close_payment_link": {
+    "id": "lnk_6789ABCDEFGHJKLMNPQRST",
+    "url": "https://pay.7331.org/l/lnk_6789ABCDEFGHJKLMNPQRST",
+    "status": "closed",
+    "quantity": 10,
+    "slots_left": 0,
+    "chain": {
+      "key": "polygon",
+      "name": "Polygon",
+      "kind": "evm",
+      "chain_id": 137,
+      "explorer_url": "https://polygonscan.com",
+      "expected_finality_seconds": 5,
+      "confirmations_final": null
+    },
+    "assets": [
+      "USDC",
+      "POL"
+    ],
+    "payment_options": [
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "amount": "5"
+      },
+      {
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "POL",
+          "name": "Polygon Ecosystem Token",
+          "decimals": 18,
+          "token_address": null
+        },
+        "amount": "52.8238"
+      }
+    ],
+    "fiat": {
+      "currency": "USD",
+      "amount": "5.00",
+      "usd": "5.00",
+      "eur": "4.45"
+    },
+    "note": "",
+    "created_at": "2026-10-23T12:00:32Z",
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "lifetime_seconds": 1800,
+    "accuracy_percent": "1",
+    "return_url": null,
+    "slots_held": 0,
+    "paid_count": 0,
+    "closed_at": "2026-10-23T12:00:32Z"
+  },
+  "create_static_deposit_address": {
+    "id": "sda_DEFGHJKLMNPQRSTUVWXYZa",
+    "customer_reference": "customer-77",
+    "chain": {
+      "key": "polygon",
+      "name": "Polygon",
+      "kind": "evm",
+      "chain_id": 137,
+      "explorer_url": "https://polygonscan.com",
+      "expected_finality_seconds": 5,
+      "confirmations_final": null
+    },
+    "assets": [
+      "USDC"
+    ],
+    "deposit_address": "0x0505050505050505050505050505050505050505",
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "sweep_blocked": false,
+    "received_usd": "0.00",
+    "payment_count": 0,
+    "last_payment_at": null,
+    "created_at": "2026-10-23T12:00:32Z",
+    "payments": []
+  },
+  "read_static_deposit_address": {
+    "id": "sda_DEFGHJKLMNPQRSTUVWXYZa",
+    "customer_reference": "customer-77",
+    "chain": {
+      "key": "polygon",
+      "name": "Polygon",
+      "kind": "evm",
+      "chain_id": 137,
+      "explorer_url": "https://polygonscan.com",
+      "expected_finality_seconds": 5,
+      "confirmations_final": null
+    },
+    "assets": [
+      "USDC"
+    ],
+    "deposit_address": "0x0505050505050505050505050505050505050505",
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "sweep_blocked": false,
+    "received_usd": "5.00",
+    "payment_count": 1,
+    "last_payment_at": "2026-10-23T12:00:50Z",
+    "created_at": "2026-10-23T12:00:32Z",
+    "payments": [
+      {
+        "id": 1,
+        "asset_symbol": "USDC",
+        "amount": "5",
+        "amount_usd": "5.00",
+        "asset_price_usd": "1.000000000000000000",
+        "credited": true,
+        "uncredited_reason": null,
+        "tx_hash": "0x0303030303030303030303030303030303030303030303030303030303030303",
+        "sender": "0x0404040404040404040404040404040404040404",
+        "block_number": 95951875,
+        "created_at": "2026-10-23T12:00:50Z"
+      }
+    ]
+  },
+  "list_static_deposit_addresses": {
+    "static_deposit_addresses": [
+      {
+        "id": "sda_DEFGHJKLMNPQRSTUVWXYZa",
+        "customer_reference": "customer-77",
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "assets": [
+          "USDC"
+        ],
+        "deposit_address": "0x0505050505050505050505050505050505050505",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "sweep_blocked": false,
+        "received_usd": "5.00",
+        "payment_count": 1,
+        "last_payment_at": "2026-10-23T12:00:50Z",
+        "created_at": "2026-10-23T12:00:32Z",
+        "payments": []
+      }
+    ],
+    "next_cursor": null
+  },
+  "read_invoice": {
+    "id": "inv_FGHJKLMNPQRSTUVWXYZabc",
+    "url": "https://pay.7331.org/i/inv_FGHJKLMNPQRSTUVWXYZabc",
+    "status": "paid",
+    "partial": false,
+    "late_payment": false,
+    "sweep_blocked": false,
+    "chain": {
+      "key": "polygon",
+      "name": "Polygon",
+      "kind": "evm",
+      "chain_id": 137,
+      "explorer_url": "https://polygonscan.com",
+      "expected_finality_seconds": 5,
+      "confirmations_final": null
+    },
+    "asset": {
+      "symbol": "USDC",
+      "name": "USD Coin",
+      "decimals": 6,
+      "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+    },
+    "assets": [
+      "USDC"
+    ],
+    "payment_options": [],
+    "deposit_address": "0x0303030303030303030303030303030303030303",
+    "amount_due": "5",
+    "amount_received": "5",
+    "amount_remaining": "0",
+    "fiat": {
+      "currency": "USD",
+      "amount": "5.00",
+      "usd": "5.00",
+      "eur": "4.45"
+    },
+    "quote": {
+      "asset_price_usd": "1",
+      "expires_at": "2026-10-23T12:29:07Z"
+    },
+    "note": "Premium plan, 1 month",
+    "return_url": null,
+    "success_url": null,
+    "expires_at": "2026-10-23T12:29:07Z",
+    "underpaid_open_until": null,
+    "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0303030303030303030303030303030303030303&uint256=0",
+    "payments": [
+      {
+        "tx_hash": "0x0101010101010101010101010101010101010101010101010101010101010101",
+        "sender": "0x0404040404040404040404040404040404040404",
+        "amount": "5",
+        "block_number": 95951791,
+        "final": true
+      }
+    ],
+    "sweeps": [
+      {
+        "tx_hash": "0x0202020202020202020202020202020202020202020202020202020202020202",
+        "asset_symbol": "USDC",
+        "amount": "5",
+        "status": "final"
+      }
+    ],
+    "refunds": [],
+    "refund_offer": {
+      "available": false,
+      "reason": "not_overpaid",
+      "senders": []
+    },
+    "stray_payments": [],
+    "seen": false,
+    "confirmations": null,
+    "confirmations_final": null,
+    "seller_support_contact": null,
+    "created_at": "2026-10-23T11:59:07Z",
+    "updated_at": "2026-10-23T11:59:15Z",
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "order_id": "customer-77:order-1042",
+    "metadata": {
+      "customer_id": 77
+    },
+    "accuracy_percent": "1",
+    "payment_link_id": null,
+    "invoice_schedule_id": null,
+    "invoice_schedule_period_start": null,
+    "paid_at": "2026-10-23T11:59:11Z",
+    "callback_url": null,
+    "refreshed_from_invoice_id": null,
+    "refreshed_into_invoice_id": null,
+    "monero": null
+  },
+  "list_rates": {
+    "rates": [
+      {
+        "chain": "polygon",
+        "asset": "POL",
+        "usd": "0.09465433",
+        "eur": "0.08428628"
+      },
+      {
+        "chain": "polygon",
+        "asset": "USDC",
+        "usd": "1",
+        "eur": "0.89046402"
+      },
+      {
+        "chain": "polygon",
+        "asset": "USDT",
+        "usd": "1",
+        "eur": "0.89046402"
+      },
+      {
+        "chain": "polygon",
+        "asset": "USDC.e",
+        "usd": "1",
+        "eur": "0.89046402"
+      },
+      {
+        "chain": "polygon",
+        "asset": "WETH",
+        "usd": "2466.7047",
+        "eur": "2196.51178529"
+      },
+      {
+        "chain": "polygon",
+        "asset": "WBTC",
+        "usd": "83919.41839495",
+        "eur": "74727.22272727"
+      },
+      {
+        "chain": "polygon",
+        "asset": "DAI",
+        "usd": "1",
+        "eur": "0.89046402"
+      },
+      {
+        "chain": "polygon",
+        "asset": "LINK",
+        "usd": "12.522989",
+        "eur": "11.15127114"
+      },
+      {
+        "chain": "polygon",
+        "asset": "AAVE",
+        "usd": "154.72649499",
+        "eur": "137.77837685"
+      },
+      {
+        "chain": "polygon",
+        "asset": "UNI",
+        "usd": "7.50473304",
+        "eur": "6.68269476"
+      }
+    ]
+  },
+  "invoice_export_csv": "row_kind,occurred_at,invoice_id,invoice_created_at,order_id,invoice_status,partial,late_payment,note,fiat_currency,fiat_amount,chain,asset,amount_due,amount_received,destination_address,deposit_address,paid_at,payment_link_id,row_status,row_asset,row_amount,asset_price_usd,transaction_hash,block_number,from_address,to_address\r\ninvoice,2026-10-23T11:59:07Z,inv_FGHJKLMNPQRSTUVWXYZabc,2026-10-23T11:59:07Z,customer-77:order-1042,paid,false,false,\"Premium plan, 1 month\",USD,5.00,polygon,USDC,5,5,0x0101010101010101010101010101010101010101,0x0303030303030303030303030303030303030303,2026-10-23T11:59:11Z,,,,,,,,,\r\npayment,2026-10-23T11:58:36Z,inv_FGHJKLMNPQRSTUVWXYZabc,2026-10-23T11:59:07Z,customer-77:order-1042,paid,false,false,\"Premium plan, 1 month\",USD,5.00,polygon,USDC,5,5,0x0101010101010101010101010101010101010101,0x0303030303030303030303030303030303030303,2026-10-23T11:59:11Z,,final,USDC,5,,0x0101010101010101010101010101010101010101010101010101010101010101,95951791,0x0404040404040404040404040404040404040404,0x0303030303030303030303030303030303030303\r\nsweep,2026-10-23T11:59:15Z,inv_FGHJKLMNPQRSTUVWXYZabc,2026-10-23T11:59:07Z,customer-77:order-1042,paid,false,false,\"Premium plan, 1 month\",USD,5.00,polygon,USDC,5,5,0x0101010101010101010101010101010101010101,0x0303030303030303030303030303030303030303,2026-10-23T11:59:11Z,,final,USDC,5,,0x0202020202020202020202020202020202020202020202020202020202020202,95951794,0x0303030303030303030303030303030303030303,0x0101010101010101010101010101010101010101\r\n",
+  "test_webhook_event": {
+    "id": "whd_LMNPQRSTUVWXYZabcdefgh",
+    "webhook_id": "test_TUVWXYZabcdefghijkmnop",
+    "event_type": "webhook.test",
+    "status": "pending",
+    "attempt_count": 0,
+    "next_attempt_at": "2026-10-23T11:59:15Z",
+    "last_response_status": null,
+    "last_failure_reason": null,
+    "created_at": "2026-10-23T11:59:15Z"
+  },
+  "webhook_events": {
+    "webhook.test": {
+      "type": "webhook.test",
+      "timestamp": "2026-10-23T11:59:15Z",
+      "data": {
+        "message": "A test event from pay-7331."
+      },
+      "test": true
+    },
+    "invoice.payment_detected": {
+      "type": "invoice.payment_detected",
+      "timestamp": "2026-10-23T11:59:15Z",
+      "data": {
+        "id": "inv_TestSampLe7e57SampLe7e",
+        "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
+        "status": "confirming",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0606060606060606060606060606060606060606",
+        "amount_due": "5",
+        "amount_received": "0",
+        "amount_remaining": "5",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.30"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T12:17:15Z"
+        },
+        "note": "Test event: nothing was paid",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T12:17:15Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=5000000",
+        "payments": [
+          {
+            "tx_hash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+            "sender": "0x0707070707070707070707070707070707070707",
+            "amount": "5",
+            "block_number": 78000000,
+            "final": false
+          }
+        ],
+        "sweeps": [],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "receiver_settles",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:47:15Z",
+        "updated_at": "2026-10-23T11:59:15Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "test-order-1042",
+        "metadata": {
+          "test": true,
+          "plan": "premium"
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": null,
+        "invoice_schedule_period_start": null,
+        "paid_at": null,
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      },
+      "test": true
+    },
+    "invoice.underpaid": {
+      "type": "invoice.underpaid",
+      "timestamp": "2026-10-23T11:59:15Z",
+      "data": {
+        "id": "inv_TestSampLe7e57SampLe7e",
+        "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
+        "status": "underpaid",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0606060606060606060606060606060606060606",
+        "amount_due": "5",
+        "amount_received": "2.5",
+        "amount_remaining": "2.5",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.30"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T12:17:15Z"
+        },
+        "note": "Test event: nothing was paid",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T12:17:15Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=2500000",
+        "payments": [
+          {
+            "tx_hash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+            "sender": "0x0707070707070707070707070707070707070707",
+            "amount": "2.5",
+            "block_number": 78000000,
+            "final": true
+          }
+        ],
+        "sweeps": [],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "receiver_settles",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:47:15Z",
+        "updated_at": "2026-10-23T11:59:15Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "test-order-1042",
+        "metadata": {
+          "test": true,
+          "plan": "premium"
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": null,
+        "invoice_schedule_period_start": null,
+        "paid_at": null,
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      },
+      "test": true
+    },
+    "invoice.paid": {
+      "type": "invoice.paid",
+      "timestamp": "2026-10-23T11:59:15Z",
+      "data": {
+        "id": "inv_TestSampLe7e57SampLe7e",
+        "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
+        "status": "paid",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0606060606060606060606060606060606060606",
+        "amount_due": "5",
+        "amount_received": "5",
+        "amount_remaining": "0",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.30"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T12:17:15Z"
+        },
+        "note": "Test event: nothing was paid",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T12:17:15Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=0",
+        "payments": [
+          {
+            "tx_hash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+            "sender": "0x0707070707070707070707070707070707070707",
+            "amount": "5",
+            "block_number": 78000000,
+            "final": true
+          }
+        ],
+        "sweeps": [],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "not_overpaid",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:47:15Z",
+        "updated_at": "2026-10-23T11:59:15Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "test-order-1042",
+        "metadata": {
+          "test": true,
+          "plan": "premium"
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": null,
+        "invoice_schedule_period_start": null,
+        "paid_at": "2026-10-23T11:57:15Z",
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      },
+      "test": true
+    },
+    "invoice.overpaid": {
+      "type": "invoice.overpaid",
+      "timestamp": "2026-10-23T11:59:15Z",
+      "data": {
+        "id": "inv_TestSampLe7e57SampLe7e",
+        "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
+        "status": "overpaid",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0606060606060606060606060606060606060606",
+        "amount_due": "5",
+        "amount_received": "6",
+        "amount_remaining": "0",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.30"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T12:17:15Z"
+        },
+        "note": "Test event: nothing was paid",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T12:17:15Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=0",
+        "payments": [
+          {
+            "tx_hash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+            "sender": "0x0707070707070707070707070707070707070707",
+            "amount": "6",
+            "block_number": 78000000,
+            "final": true
+          }
+        ],
+        "sweeps": [],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "receiver_settles",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:47:15Z",
+        "updated_at": "2026-10-23T11:59:15Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "test-order-1042",
+        "metadata": {
+          "test": true,
+          "plan": "premium"
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": null,
+        "invoice_schedule_period_start": null,
+        "paid_at": "2026-10-23T11:57:15Z",
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      },
+      "test": true
+    },
+    "invoice.expired": {
+      "type": "invoice.expired",
+      "timestamp": "2026-10-23T11:59:17Z",
+      "data": {
+        "id": "inv_TestSampLe7e57SampLe7e",
+        "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
+        "status": "expired",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0606060606060606060606060606060606060606",
+        "amount_due": "5",
+        "amount_received": "0",
+        "amount_remaining": "5",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.30"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T12:17:17Z"
+        },
+        "note": "Test event: nothing was paid",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T12:17:17Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=5000000",
+        "payments": [],
+        "sweeps": [],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "receiver_settles",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:47:17Z",
+        "updated_at": "2026-10-23T11:59:17Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "test-order-1042",
+        "metadata": {
+          "test": true,
+          "plan": "premium"
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": null,
+        "invoice_schedule_period_start": null,
+        "paid_at": null,
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      },
+      "test": true
+    },
+    "invoice.cancelled": {
+      "type": "invoice.cancelled",
+      "timestamp": "2026-10-23T11:59:23Z",
+      "data": {
+        "id": "inv_TestSampLe7e57SampLe7e",
+        "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
+        "status": "cancelled",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0606060606060606060606060606060606060606",
+        "amount_due": "5",
+        "amount_received": "0",
+        "amount_remaining": "5",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.30"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T12:17:23Z"
+        },
+        "note": "Test event: nothing was paid",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T12:17:23Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=5000000",
+        "payments": [],
+        "sweeps": [],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "receiver_settles",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:47:23Z",
+        "updated_at": "2026-10-23T11:59:23Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "test-order-1042",
+        "metadata": {
+          "test": true,
+          "plan": "premium"
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": null,
+        "invoice_schedule_period_start": null,
+        "paid_at": null,
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      },
+      "test": true
+    },
+    "invoice.swept": {
+      "type": "invoice.swept",
+      "timestamp": "2026-10-23T11:59:29Z",
+      "data": {
+        "id": "inv_TestSampLe7e57SampLe7e",
+        "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
+        "status": "paid",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0606060606060606060606060606060606060606",
+        "amount_due": "5",
+        "amount_received": "5",
+        "amount_remaining": "0",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.30"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T12:17:29Z"
+        },
+        "note": "Test event: nothing was paid",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T12:17:29Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=0",
+        "payments": [
+          {
+            "tx_hash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+            "sender": "0x0707070707070707070707070707070707070707",
+            "amount": "5",
+            "block_number": 78000000,
+            "final": true
+          }
+        ],
+        "sweeps": [
+          {
+            "tx_hash": "0x0505050505050505050505050505050505050505050505050505050505050505",
+            "asset_symbol": "USDC",
+            "amount": "5",
+            "status": "final"
+          }
+        ],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "not_overpaid",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:47:29Z",
+        "updated_at": "2026-10-23T11:59:29Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "test-order-1042",
+        "metadata": {
+          "test": true,
+          "plan": "premium"
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": null,
+        "invoice_schedule_period_start": null,
+        "paid_at": "2026-10-23T11:57:29Z",
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      },
+      "test": true
+    },
+    "invoice.sweep_failed": {
+      "type": "invoice.sweep_failed",
+      "timestamp": "2026-10-23T11:59:35Z",
+      "data": {
+        "id": "inv_TestSampLe7e57SampLe7e",
+        "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
+        "status": "paid",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": true,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0606060606060606060606060606060606060606",
+        "amount_due": "5",
+        "amount_received": "5",
+        "amount_remaining": "0",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.30"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T12:17:35Z"
+        },
+        "note": "Test event: nothing was paid",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T12:17:35Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=0",
+        "payments": [
+          {
+            "tx_hash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+            "sender": "0x0707070707070707070707070707070707070707",
+            "amount": "5",
+            "block_number": 78000000,
+            "final": true
+          }
+        ],
+        "sweeps": [
+          {
+            "tx_hash": "0x0505050505050505050505050505050505050505050505050505050505050505",
+            "asset_symbol": null,
+            "amount": null,
+            "status": "failed"
+          }
+        ],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "not_overpaid",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:47:35Z",
+        "updated_at": "2026-10-23T11:59:35Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "test-order-1042",
+        "metadata": {
+          "test": true,
+          "plan": "premium"
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": null,
+        "invoice_schedule_period_start": null,
+        "paid_at": "2026-10-23T11:57:35Z",
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      },
+      "test": true
+    },
+    "invoice.late_payment": {
+      "type": "invoice.late_payment",
+      "timestamp": "2026-10-23T11:59:41Z",
+      "data": {
+        "id": "inv_TestSampLe7e57SampLe7e",
+        "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
+        "status": "expired",
+        "partial": false,
+        "late_payment": true,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0606060606060606060606060606060606060606",
+        "amount_due": "5",
+        "amount_received": "0",
+        "amount_remaining": "5",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.30"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T12:17:41Z"
+        },
+        "note": "Test event: nothing was paid",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T12:17:41Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=5000000",
+        "payments": [],
+        "sweeps": [
+          {
+            "tx_hash": null,
+            "asset_symbol": null,
+            "amount": null,
+            "status": "pending"
+          }
+        ],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "receiver_settles",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:47:41Z",
+        "updated_at": "2026-10-23T11:59:41Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "test-order-1042",
+        "metadata": {
+          "test": true,
+          "plan": "premium"
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": null,
+        "invoice_schedule_period_start": null,
+        "paid_at": null,
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      },
+      "test": true
+    },
+    "invoice.stray_payment": {
+      "type": "invoice.stray_payment",
+      "timestamp": "2026-10-23T11:59:47Z",
+      "data": {
+        "id": "inv_TestSampLe7e57SampLe7e",
+        "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
+        "status": "awaiting_payment",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0606060606060606060606060606060606060606",
+        "amount_due": "5",
+        "amount_received": "0",
+        "amount_remaining": "5",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.30"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T12:17:47Z"
+        },
+        "note": "Test event: nothing was paid",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T12:17:47Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=5000000",
+        "payments": [],
+        "sweeps": [],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "receiver_settles",
+          "senders": []
+        },
+        "stray_payments": [
+          {
+            "asset_symbol": "POL",
+            "amount": "12.5",
+            "sender": "0x0707070707070707070707070707070707070707",
+            "tx_hash": "0x0606060606060606060606060606060606060606060606060606060606060606",
+            "block_number": 78000000,
+            "final": true,
+            "swept": false,
+            "refund_handling": "receiver_settles"
+          }
+        ],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:47:47Z",
+        "updated_at": "2026-10-23T11:59:47Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "test-order-1042",
+        "metadata": {
+          "test": true,
+          "plan": "premium"
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": null,
+        "invoice_schedule_period_start": null,
+        "paid_at": null,
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      },
+      "test": true
+    },
+    "schedule.invoice_created": {
+      "type": "schedule.invoice_created",
+      "timestamp": "2026-10-23T11:59:53Z",
+      "data": {
+        "id": "inv_TestSampLe7e57SampLe7e",
+        "url": "https://pay.7331.org/i/inv_TestSampLe7e57SampLe7e",
+        "status": "awaiting_payment",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0606060606060606060606060606060606060606",
+        "amount_due": "5",
+        "amount_received": "0",
+        "amount_remaining": "5",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.30"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T23:47:53Z"
+        },
+        "note": "Test event: nothing was paid",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T23:47:53Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0606060606060606060606060606060606060606&uint256=5000000",
+        "payments": [],
+        "sweeps": [],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "receiver_settles",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-23T11:47:53Z",
+        "updated_at": "2026-10-23T11:59:53Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "test-plan-77-20261022",
+        "metadata": {
+          "test": true,
+          "plan": "premium"
+        },
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": "sch_TestSampLe7e57SampLe7e",
+        "invoice_schedule_period_start": "2026-10-23T11:47:53Z",
+        "paid_at": null,
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      },
+      "test": true
+    },
+    "static_address.payment_received": {
+      "type": "static_address.payment_received",
+      "timestamp": "2026-10-23T12:00:00Z",
+      "data": {
+        "static_deposit_address": {
+          "id": "sda_TestSampLe7e57SampLe7e",
+          "customer_reference": "test-customer-77",
+          "chain": {
+            "key": "polygon",
+            "name": "Polygon",
+            "kind": "evm",
+            "chain_id": 137,
+            "explorer_url": "https://polygonscan.com",
+            "expected_finality_seconds": 5,
+            "confirmations_final": null
+          },
+          "assets": [
+            "USDC"
+          ],
+          "deposit_address": "0x0606060606060606060606060606060606060606",
+          "destination_address": "0x0101010101010101010101010101010101010101",
+          "sweep_blocked": false,
+          "received_usd": "5",
+          "payment_count": 1,
+          "last_payment_at": "2026-10-23T11:58:00Z",
+          "created_at": "2026-10-20T12:00:00Z",
+          "payments": []
+        },
+        "payment": {
+          "id": 1,
+          "asset_symbol": "USDC",
+          "amount": "5",
+          "amount_usd": "5",
+          "asset_price_usd": "1",
+          "credited": true,
+          "uncredited_reason": null,
+          "tx_hash": "0x0404040404040404040404040404040404040404040404040404040404040404",
+          "sender": "0x0707070707070707070707070707070707070707",
+          "block_number": 78000000,
+          "created_at": "2026-10-23T11:58:00Z"
+        }
+      },
+      "test": true
+    },
+    "static_address.stray_payment": {
+      "type": "static_address.stray_payment",
+      "timestamp": "2026-10-23T12:00:06Z",
+      "data": {
+        "static_deposit_address": {
+          "id": "sda_TestSampLe7e57SampLe7e",
+          "customer_reference": "test-customer-77",
+          "chain": {
+            "key": "polygon",
+            "name": "Polygon",
+            "kind": "evm",
+            "chain_id": 137,
+            "explorer_url": "https://polygonscan.com",
+            "expected_finality_seconds": 5,
+            "confirmations_final": null
+          },
+          "assets": [
+            "USDC"
+          ],
+          "deposit_address": "0x0606060606060606060606060606060606060606",
+          "destination_address": "0x0101010101010101010101010101010101010101",
+          "sweep_blocked": false,
+          "received_usd": "5",
+          "payment_count": 2,
+          "last_payment_at": "2026-10-23T11:58:06Z",
+          "created_at": "2026-10-20T12:00:06Z",
+          "payments": []
+        },
+        "payment": {
+          "id": 2,
+          "asset_symbol": "POL",
+          "amount": "12.5",
+          "amount_usd": null,
+          "asset_price_usd": null,
+          "credited": false,
+          "uncredited_reason": "wrong_coin",
+          "tx_hash": null,
+          "sender": null,
+          "block_number": 78000000,
+          "created_at": "2026-10-23T11:58:06Z"
+        }
+      },
+      "test": true
+    },
+    "static_address.swept": {
+      "type": "static_address.swept",
+      "timestamp": "2026-10-23T12:00:12Z",
+      "data": {
+        "static_deposit_address": {
+          "id": "sda_TestSampLe7e57SampLe7e",
+          "customer_reference": "test-customer-77",
+          "chain": {
+            "key": "polygon",
+            "name": "Polygon",
+            "kind": "evm",
+            "chain_id": 137,
+            "explorer_url": "https://polygonscan.com",
+            "expected_finality_seconds": 5,
+            "confirmations_final": null
+          },
+          "assets": [
+            "USDC"
+          ],
+          "deposit_address": "0x0606060606060606060606060606060606060606",
+          "destination_address": "0x0101010101010101010101010101010101010101",
+          "sweep_blocked": false,
+          "received_usd": "5",
+          "payment_count": 1,
+          "last_payment_at": "2026-10-23T11:58:12Z",
+          "created_at": "2026-10-20T12:00:12Z",
+          "payments": []
+        },
+        "sweep": {
+          "tx_hash": "0x0505050505050505050505050505050505050505050505050505050505050505",
+          "status": "final"
+        }
+      },
+      "test": true
+    },
+    "static_address.sweep_failed": {
+      "type": "static_address.sweep_failed",
+      "timestamp": "2026-10-23T12:00:18Z",
+      "data": {
+        "static_deposit_address": {
+          "id": "sda_TestSampLe7e57SampLe7e",
+          "customer_reference": "test-customer-77",
+          "chain": {
+            "key": "polygon",
+            "name": "Polygon",
+            "kind": "evm",
+            "chain_id": 137,
+            "explorer_url": "https://polygonscan.com",
+            "expected_finality_seconds": 5,
+            "confirmations_final": null
+          },
+          "assets": [
+            "USDC"
+          ],
+          "deposit_address": "0x0606060606060606060606060606060606060606",
+          "destination_address": "0x0101010101010101010101010101010101010101",
+          "sweep_blocked": true,
+          "received_usd": "5",
+          "payment_count": 1,
+          "last_payment_at": "2026-10-23T11:58:18Z",
+          "created_at": "2026-10-20T12:00:18Z",
+          "payments": []
+        },
+        "sweep": {
+          "tx_hash": "0x0505050505050505050505050505050505050505050505050505050505050505",
+          "status": "failed"
+        }
+      },
+      "test": true
+    }
+  },
+  "create_invoice_schedule": {
+    "id": "sch_89ABCDEFGHJKLMNPQRSTUV",
+    "status": "active",
+    "interval": "monthly",
+    "starts_at": "2026-10-22T12:02:15Z",
+    "ends_after_invoice_count": 12,
+    "ends_at": null,
+    "next_period_start": "2026-10-22T12:02:15Z",
+    "created_invoice_count": 0,
+    "last_invoice_created_at": null,
+    "last_failure_code": null,
+    "last_failure_at": null,
+    "amount": "5",
+    "currency": "USD",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "USDC"
+    ],
+    "assets_by_chain": null,
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "note": "",
+    "metadata": null,
+    "order_id_prefix": "customer-77-premium",
+    "lifetime_seconds": 43200,
+    "accuracy_percent": "1",
+    "return_url": null,
+    "success_url": null,
+    "callback_url": null,
+    "paused_at": null,
+    "ended_at": null,
+    "created_at": "2026-10-22T12:02:15Z",
+    "updated_at": "2026-10-22T12:02:15Z"
+  },
+  "read_invoice_schedule": {
+    "id": "sch_89ABCDEFGHJKLMNPQRSTUV",
+    "status": "active",
+    "interval": "monthly",
+    "starts_at": "2026-10-22T12:02:15Z",
+    "ends_after_invoice_count": 12,
+    "ends_at": null,
+    "next_period_start": "2026-11-22T12:02:15Z",
+    "created_invoice_count": 1,
+    "last_invoice_created_at": "2026-10-22T12:02:19Z",
+    "last_failure_code": null,
+    "last_failure_at": null,
+    "amount": "5",
+    "currency": "USD",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "USDC"
+    ],
+    "assets_by_chain": null,
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "note": "",
+    "metadata": null,
+    "order_id_prefix": "customer-77-premium",
+    "lifetime_seconds": 43200,
+    "accuracy_percent": "1",
+    "return_url": null,
+    "success_url": null,
+    "callback_url": null,
+    "paused_at": null,
+    "ended_at": null,
+    "created_at": "2026-10-22T12:02:15Z",
+    "updated_at": "2026-10-22T12:02:19Z"
+  },
+  "list_invoice_schedule_invoices": {
+    "invoices": [
+      {
+        "id": "inv_FGHJKLMNPQRSTUVWXYZabc",
+        "url": "https://pay.7331.org/i/inv_FGHJKLMNPQRSTUVWXYZabc",
+        "status": "awaiting_payment",
+        "partial": false,
+        "late_payment": false,
+        "sweep_blocked": false,
+        "chain": {
+          "key": "polygon",
+          "name": "Polygon",
+          "kind": "evm",
+          "chain_id": 137,
+          "explorer_url": "https://polygonscan.com",
+          "expected_finality_seconds": 5,
+          "confirmations_final": null
+        },
+        "asset": {
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6,
+          "token_address": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        },
+        "assets": [
+          "USDC"
+        ],
+        "payment_options": [],
+        "deposit_address": "0x0202020202020202020202020202020202020202",
+        "amount_due": "5",
+        "amount_received": "0",
+        "amount_remaining": "5",
+        "fiat": {
+          "currency": "USD",
+          "amount": "5.00",
+          "usd": "5.00",
+          "eur": "4.45"
+        },
+        "quote": {
+          "asset_price_usd": "1",
+          "expires_at": "2026-10-23T00:02:19Z"
+        },
+        "note": "",
+        "return_url": null,
+        "success_url": null,
+        "expires_at": "2026-10-23T00:02:19Z",
+        "underpaid_open_until": null,
+        "payment_uri": "ethereum:0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359@137/transfer?address=0x0202020202020202020202020202020202020202&uint256=5000000",
+        "payments": [],
+        "sweeps": [],
+        "refunds": [],
+        "refund_offer": {
+          "available": false,
+          "reason": "not_overpaid",
+          "senders": []
+        },
+        "stray_payments": [],
+        "seen": false,
+        "confirmations": null,
+        "confirmations_final": null,
+        "seller_support_contact": null,
+        "created_at": "2026-10-22T12:02:19Z",
+        "updated_at": "2026-10-22T12:02:19Z",
+        "destination_address": "0x0101010101010101010101010101010101010101",
+        "order_id": "customer-77-premium-20261020",
+        "metadata": null,
+        "accuracy_percent": "1",
+        "payment_link_id": null,
+        "invoice_schedule_id": "sch_89ABCDEFGHJKLMNPQRSTUV",
+        "invoice_schedule_period_start": "2026-10-22T12:02:15Z",
+        "paid_at": null,
+        "callback_url": null,
+        "refreshed_from_invoice_id": null,
+        "refreshed_into_invoice_id": null,
+        "monero": null
+      }
+    ]
+  },
+  "pause_invoice_schedule": {
+    "id": "sch_NPQRSTUVWXYZabcdefghij",
+    "status": "paused",
+    "interval": "daily",
+    "starts_at": "2026-10-21T12:00:00Z",
+    "ends_after_invoice_count": null,
+    "ends_at": null,
+    "next_period_start": null,
+    "created_invoice_count": 2,
+    "last_invoice_created_at": "2026-10-22T12:01:04Z",
+    "last_failure_code": null,
+    "last_failure_at": null,
+    "amount": "5",
+    "currency": "USD",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "USDC"
+    ],
+    "assets_by_chain": null,
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "note": "Premium plan, daily",
+    "metadata": {
+      "customer_id": 77
+    },
+    "order_id_prefix": "plan-77",
+    "lifetime_seconds": 43200,
+    "accuracy_percent": "1",
+    "return_url": null,
+    "success_url": null,
+    "callback_url": null,
+    "paused_at": "2026-10-22T12:01:05Z",
+    "ended_at": null,
+    "created_at": "2026-10-22T12:00:00Z",
+    "updated_at": "2026-10-22T12:01:05Z"
+  },
+  "resume_invoice_schedule": {
+    "id": "sch_NPQRSTUVWXYZabcdefghij",
+    "status": "active",
+    "interval": "daily",
+    "starts_at": "2026-10-20T12:00:00Z",
+    "ends_after_invoice_count": null,
+    "ends_at": null,
+    "next_period_start": "2026-10-23T12:00:00Z",
+    "created_invoice_count": 2,
+    "last_invoice_created_at": "2026-10-22T12:01:04Z",
+    "last_failure_code": null,
+    "last_failure_at": null,
+    "amount": "5",
+    "currency": "USD",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "USDC"
+    ],
+    "assets_by_chain": null,
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "note": "Premium plan, daily",
+    "metadata": {
+      "customer_id": 77
+    },
+    "order_id_prefix": "plan-77",
+    "lifetime_seconds": 43200,
+    "accuracy_percent": "1",
+    "return_url": null,
+    "success_url": null,
+    "callback_url": null,
+    "paused_at": null,
+    "ended_at": null,
+    "created_at": "2026-10-22T12:00:00Z",
+    "updated_at": "2026-10-22T12:01:40Z"
+  },
+  "cancel_invoice_schedule": {
+    "id": "sch_NPQRSTUVWXYZabcdefghij",
+    "status": "cancelled",
+    "interval": "daily",
+    "starts_at": "2026-10-20T12:00:00Z",
+    "ends_after_invoice_count": null,
+    "ends_at": null,
+    "next_period_start": null,
+    "created_invoice_count": 2,
+    "last_invoice_created_at": "2026-10-22T12:01:04Z",
+    "last_failure_code": null,
+    "last_failure_at": null,
+    "amount": "5",
+    "currency": "USD",
+    "chains": [
+      "polygon"
+    ],
+    "assets": [
+      "USDC"
+    ],
+    "assets_by_chain": null,
+    "destination_address": "0x0101010101010101010101010101010101010101",
+    "note": "Premium plan, daily",
+    "metadata": {
+      "customer_id": 77
+    },
+    "order_id_prefix": "plan-77",
+    "lifetime_seconds": 43200,
+    "accuracy_percent": "1",
+    "return_url": null,
+    "success_url": null,
+    "callback_url": null,
+    "paused_at": null,
+    "ended_at": "2026-10-22T12:02:15Z",
+    "created_at": "2026-10-22T12:00:00Z",
+    "updated_at": "2026-10-22T12:02:15Z"
+  }
+}

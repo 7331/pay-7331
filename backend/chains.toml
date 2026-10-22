@@ -1,0 +1,552 @@
+# Public chain facts (PLAN.md sections 1 and 14; checked 2026-10-09, assets 2026-10-11). `PAY_ENABLED_CHAINS` picks which run. Per deployment,
+# `PAY_RPC_URLS_<CHAIN>` (comma separated), `PAY_PRICE_RPC_URLS_<CHAIN>` and `PAY_FACTORY_ADDRESS_<CHAIN>` override
+# `rpc_urls`, `price_rpc_urls` and `factory_address`; nothing else here is environment-specific.
+#
+# Per chain: `chain_id` (startup refuses an RPC serving another), `rpc_urls` in failover order, `explorer_url`,
+# `finality_tag` (only `finalized` is supported), `poll_interval_seconds` (watcher tick), `rescan_interval_seconds`
+# (every recent deposit, all assets: one whose invoice is younger than `recent_deposit_window_seconds` or not closed
+# yet), `old_deposit_rescan_interval_seconds` (every other deposit ever made, all assets), the static deposit scan's
+# `static_deposit_hot_scan_interval_seconds`, `static_deposit_hot_window_seconds` and
+# `static_deposit_cold_scan_interval_seconds` (optional: 60, 86400 and 1200; PLAN.md section 17),
+# `maximum_price_age_seconds` (no price is used from an older feed answer: quotes, credits, refunds, estimates),
+# `minimum_priority_fee_gwei`, `fee_bump_after_seconds` (an unmined attempt is replaced at the same nonce),
+# `maximum_fee_per_gas_gwei` (the fee cap no attempt or bump goes above; both fees are decimal strings in gwei, since
+# a rollup's fees are fractions of one), `seconds_per_block` (a decimal string: every block-count threshold of the
+# watcher is written in seconds and turned into blocks with it, PLAN.md section 15), `expected_finality_seconds` (how
+# long `finalized` usually trails a payment: the payer's confirming screen says it, and the stuck-operation alert
+# waits that long longer; money moves on the `finalized` tag, never on this number), `sequencer_uptime_feed` (a
+# rollup's Chainlink L2 Sequencer Uptime Feed: no price is used while it answers 1 (down) or for an hour after it was
+# back; empty where there is none), `price_feed_heartbeat_seconds` (the feeds'
+# heartbeat: reconcile and the operator alerts flag a feed older than it plus a minute),
+# `factory_address` (empty until deployed), `price_rpc_urls` (empty: the chain's own; Amoy reads mainnet feeds) and
+# `price_chain_id` (the chain those endpoints must serve),
+# `eur_usd_feed`, and `assets` (symbol, name, decimals, `quote_decimals` (places a quote is rounded up to, so the
+# amount stays short to type), `token_address` empty for the native coin, `usd_feed`, `usd_peg` (true for a USD stablecoin: priced at 1 USD near
+# its peg, never above 1 USD off it), `minimum_sweep_amount`
+# (about 0.05 USD: no invoice for less, no repeat sweep of a swept deposit for less, so dust cannot make the
+# operator pay gas)).
+#
+# Per chain, `kind` (2026-10-14): `"evm"` (the default, everything above) or `"monero"` (PLAN.md section 14). A Monero
+# chain has none of the EVM-only fields (`chain_id`, `rpc_urls`, `finality_tag`, the rescan and fee fields,
+# `factory_address`, the treasury table) and the loader refuses them there, as it refuses these on an EVM chain.
+# It has `name`, `explorer_url`, `poll_interval_seconds` (the scanner's poll), `network` ("mainnet" or "stagenet"),
+# `nodes = [{ url, operator }]` (restricted-RPC nodes in failover order, at least 2 operators: count operators, not
+# hosts; per deployment `PAY_MONERO_NODES_<CHAIN>`, comma-separated `url=operator` pairs with the operator named
+# explicitly, overrides it; mainnet takes https URLs only, stagenet http too), `confirmations_final` (where money moves: mainnet 10, the consensus spend lock;
+# stagenet 2 for the end-to-end run), the price fields (`maximum_price_age_seconds`, `price_feed_heartbeat_seconds`,
+# `price_rpc_urls`, `price_chain_id`, `price_chain_key`, `eur_usd_feed`) and the one asset XMR (12 decimals, `token_address` empty,
+# `usd_feed` Chainlink XMR/USD on Polygon, read over `price_rpc_urls` as Amoy reads mainnet feeds, with its own
+# `price_feed_heartbeat_seconds` and `maximum_price_age_seconds` (an asset may set both; left out, it takes the
+# chain's), `minimum_sweep_amount` "0": nothing is swept on this kind, so the 1 USD invoice minimum guards it instead,
+# for an XMR-priced amount too, valued at the live XMR/USD price when the invoice is made).
+#
+# Per chain, `[chains.<key>.treasury]` (PLAN.md section 5, treasury; 2026-10-13): `treasury_safe_address` (the Safe
+# that funds the operator keys; empty turns the treasury off: no top-ups and no treasury returns; per deployment
+# `PAY_TREASURY_SAFE_ADDRESS_<CHAIN>` overrides it), `allowance_module_address` (Safe's Allowance Module v0.1.1; empty
+# where it is not deployed, and then no treasury can be set), the Safe v1.4.1 deployment the treasury CLI builds on
+# (`safe_singleton_address` SafeL2, `safe_proxy_factory_address`, `safe_fallback_handler_address`
+# CompatibilityFallbackHandler, `safe_multi_send_call_only_address`), and `top_ups`: per key role (`refund`: the
+# refund key, float and refund gas; `sweeper`: each sweeper key, gas only) and `asset_symbol`, `low_amount` (below it
+# the watcher pulls a top-up), `target_amount` (what a top-up fills up to) and `daily_allowance_amount` (the
+# allowance `treasury setup-transactions` sets per key, reset every 1440 minutes), all decimal strings in token units.
+# Addresses: Safe v1.4.1 canonical (https://github.com/safe-global/safe-deployments, src/assets/v1.4.1, "137":
+# "canonical"); the Allowance Module from
+# https://github.com/safe-global/safe-modules-deployments src/assets/allowance-module/v0.1.1/allowance-module.json
+# (137 only; Amoy has none). Each has code on Polygon (checked 2026-10-13).
+#
+# Assets are a curated list, display order, each priced by a live Chainlink USD feed. Checked
+# 2026-10-11: token addresses and decimals against CoinGecko's token list (tokens.coingecko.com/polygon-pos/all.json)
+# and on-chain `symbol()`/`decimals()`; each token moved exactly the amount sent on a fork transfer (no
+# fee-on-transfer) and held its balance over 100 blocks (no rebasing). Feeds from Chainlink's directory, the list
+# docs.chain.link's Polygon feed page loads (https://reference-data-directory.vercel.app/feeds-matic-mainnet.json,
+# checked 2026-10-13): each is a `feedCategory` "low" (low market risk) feed with a 27 s heartbeat and 8 decimals, and
+# its `description()` matched on 2026-10-11. `quote_decimals`: one step under a cent at 2026-10-11 prices
+# (stablecoins 2).
+
+[chains.polygon]
+name = "Polygon"
+chain_id = 137
+# Keyless eth_getLogs, measured 2026-10-12 (PLAN.md section 1 has the table). The watcher halves a range an endpoint
+# refuses down to 100 blocks and fails over on a history refusal, so the first two keep the tip-following order of
+# 2026-10-09 and the last three serve a catch-up:
+# - publicnode: logs at least 100,000 blocks back (2026-10-14; it was 98 blocks earlier), 5M back is "Archive requests
+#   require a personal token" (HTTP 403); ranges over 10,000 blocks get -32701 "exceed maximum block range: 10000".
+#   Limits not documented in the sources checked (https://polygon.publicnode.com).
+# - dRPC: full history, but its free plan refuses ranges over 101 blocks, at the tip and 5M blocks back alike ("ranges
+#   over 10000 blocks are not supported on free plan", HTTP 400, whatever the range); at most 10,000 logs and a 2 s
+#   timeout a request, 120,000 compute units a minute per IP, batches of at most 3 requests
+#   (https://drpc.org/docs/howitworks/ratelimiting; the client sends 3, `JSON_RPC_BATCH_SIZE_BY_HOST`). Near the tip
+#   it clamped a `toBlock` past its head and answered logs instead of refusing (2026-10-13).
+# - Tenderly (Polygon's community endpoint): full history, ranges up to 10,000 blocks (HTTP 413 above); "no rate limits
+#   for basic usage" (https://tenderly.co/blog/changelog/tenderly-is-a-polygon-public-rpc-provider); Tenderly's docs
+#   say 3,000 logs a reply on public endpoints (https://docs.tenderly.co/node-rpc/overview), measured 5,912 passing.
+# - QuickNode's public endpoint (listed at https://docs.polygon.technology/pos/reference/rpc-endpoints/): full history,
+#   "eth_getLogs is limited to a 10,000 range" (HTTP 413), slow on wide ranges (10,000 blocks in 3.7 s); 20 requests a
+#   second, batch entries included (-32007 "20/second request limit reached" for 30 of a batch of 50, 2026-10-13; the
+#   client sends 10, and sets the endpoint aside on a -32007, PLAN.md section 1). Its public endpoint's limits are not
+#   documented in the sources checked (https://www.quicknode.com/docs/ethereum/error-references lists the codes).
+# - Pocket's public portal: full history, 100,000 blocks passed; 2,000 requests a minute per IP
+#   (https://docs.pocket.network/developers/supported-chains/); once answered "historical state is not available"
+#   (a pruned supplier), which fails over, and 3 of 40 deep 2,000-block reads "relay timeout exceeded" (HTTP 504),
+#   which narrows the range.
+# Refused or dead on 2026-10-12: polygon-rpc.com, Nodies, Ankr, OnFinality, rpcfast (key or plan), 1rpc.io (503),
+# BlockPI and Omnia (521), Blast (shut down), Lava (discontinued), LlamaRPC and meowrpc (no DNS), ZAN (no getLogs
+# without an account), Tatum (ranges over 100 blocks refused, and in one run a null result instead of logs for
+# 10,000), polygon.gateway.tenderly.co (Tenderly again; 12 of 60 requests sent 10 at a time rate limited).
+# rpc.sentio.xyz/matic answered keyless (10,000 blocks, full history) but no source checked offers it as a public
+# endpoint, so it is left out.
+rpc_urls = [
+    "https://polygon-bor-rpc.publicnode.com",
+    "https://polygon.drpc.org",
+    "https://tenderly.rpc.polygon.community",
+    "https://rpc-mainnet.matic.quiknode.pro",
+    "https://poly.api.pocket.network",
+]
+explorer_url = "https://polygonscan.com"
+finality_tag = "finalized"
+# Polygon's blocks take about 2 s; `finalized` trails by 2 to 5 s (Heimdall v2 fast finality,
+# https://docs.polygon.technology/pos/concepts/finality/finality).
+seconds_per_block = "2"
+expected_finality_seconds = 5
+sequencer_uptime_feed = ""
+poll_interval_seconds = 2
+rescan_interval_seconds = 600
+recent_deposit_window_seconds = 86400
+old_deposit_rescan_interval_seconds = 86400
+# Polygon's feeds answered 5 to 26 seconds old on 2026-10-09; five minutes old means a stalled feed (it
+# was an hour before 2026-10-13). Over 2026-10-06 to 10-13 no listed feed went more than 69 s between updates. EUR/USD follows forex
+# hours (https://docs.chain.link/data-feeds/selecting-data-feeds, "Market hours") but kept updating through the weekend
+# of 2026-10-10/11 at the Friday close (at most 47 s apart), so it did not trip this; holidays not seen yet.
+maximum_price_age_seconds = 300
+# Every feed above has a 27 s heartbeat (Chainlink's directory, checked 2026-10-12); reconcile and the operator alerts
+# flag one past it plus a minute, long before quotes refuse it.
+price_feed_heartbeat_seconds = 27
+# Polygon's documented minimum tip (https://docs.polygon.technology/tools/gas/polygon-gas-station.md).
+minimum_priority_fee_gwei = 25
+fee_bump_after_seconds = 30
+# About 8x the 249 gwei base fee of 2026-10-09: a refund (21,000 gas) costs at most 0.042 POL; a stuck attempt waits
+# for the base fee to come down instead of bidding without end.
+maximum_fee_per_gas_gwei = 2000
+factory_address = "0x91749BD4e0Db4050D4F0B07f0E8f929Da552a661"  # deployed 2026-10-09, block 95206166
+price_rpc_urls = []
+price_chain_id = 137
+eur_usd_feed = "0x73366Fe0AA0Ded304479862808e02506FE556a98"
+assets = [
+    { symbol = "POL", name = "Polygon Ecosystem Token", decimals = 18, quote_decimals = 4, token_address = "", usd_feed = "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0", minimum_sweep_amount = "0.5" },
+    { symbol = "USDC", name = "USD Coin", decimals = 6, quote_decimals = 2, token_address = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359", usd_feed = "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7", usd_peg = true, minimum_sweep_amount = "0.05" },
+    # On-chain name() is "USDT0" (checked 2026-10-09), which payers read as a typo: shown as "Tether USD" (2026-10-11); the
+    # API symbol stays USDT (PLAN.md section 7). `name` is display only.
+    { symbol = "USDT", name = "Tether USD", decimals = 6, quote_decimals = 2, token_address = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", usd_feed = "0x0A6513e40db6EB1b165753AD52E80663aeA50545", usd_peg = true, minimum_sweep_amount = "0.05" },
+    # Bridged USDC; on-chain symbol() is "USDC" (checked 2026-10-11), so the API symbol is USDC.e. The USDC/USD feed.
+    { symbol = "USDC.e", name = "USD Coin (PoS)", decimals = 6, quote_decimals = 2, token_address = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", usd_feed = "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7", usd_peg = true, minimum_sweep_amount = "0.05" },
+    { symbol = "WETH", name = "Wrapped Ether", decimals = 18, quote_decimals = 6, token_address = "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", usd_feed = "0xF9680D99D6C9589e2a93a78A04A279e509205945", minimum_sweep_amount = "0.00002" },
+    # BTC/USD, not WBTC/USD (0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6): that one is low-risk now but has a 300 s
+    # heartbeat (Chainlink's directory, 2026-10-13), and reconcile and the operator alerts flag any feed older than the
+    # chain-wide `price_feed_heartbeat_seconds` (27) plus a minute, so it would alert whenever it sits between updates.
+    # A WBTC depeg from BTC is not priced in.
+    { symbol = "WBTC", name = "Wrapped BTC", decimals = 8, quote_decimals = 7, token_address = "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6", usd_feed = "0xc907E116054Ad103354f2D350FD2514433D57F6f", minimum_sweep_amount = "0.0000006" },
+    { symbol = "DAI", name = "Dai Stablecoin", decimals = 18, quote_decimals = 2, token_address = "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063", usd_feed = "0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D", usd_peg = true, minimum_sweep_amount = "0.05" },
+    # The PoS-bridged ERC-20 LINK. Chainlink's own ERC-677 LINK on Polygon (0xb0897686c545045aFc77CF20eC7A532E3120E0F1,
+    # https://docs.chain.link/resources/link-token-contracts; PegSwap converts between them) is another token: sent to a
+    # deposit it is not watched at all: neither a payment nor stray money, and no rescan or check reads it.
+    { symbol = "LINK", name = "Chainlink", decimals = 18, quote_decimals = 4, token_address = "0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39", usd_feed = "0xd9FFdb71EbE7496cC440152d43986Aae0AB76665", minimum_sweep_amount = "0.004" },
+    { symbol = "AAVE", name = "Aave", decimals = 18, quote_decimals = 5, token_address = "0xD6DF932A45C0f255f85145f286eA0b292B21C90B", usd_feed = "0x72484B12719E23115761D5DA1646945632979bB6", minimum_sweep_amount = "0.0003" },
+    { symbol = "UNI", name = "Uniswap", decimals = 18, quote_decimals = 4, token_address = "0xb33EaAd8d922B1083446DC23f610c2567fB5180f", usd_feed = "0xdf0Fb4e4F928d2dCB76f438575fDD8682386e13C", minimum_sweep_amount = "0.006" },
+]
+
+[chains.polygon.treasury]
+# Empty until the owner makes the treasury Safe (`treasury create-safe`) and sets it up.
+treasury_safe_address = ""
+allowance_module_address = "0xAA46724893dedD72658219405185Fb0Fc91e091C"
+safe_singleton_address = "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762"
+safe_proxy_factory_address = "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67"
+safe_fallback_handler_address = "0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99"
+safe_multi_send_call_only_address = "0x9641d764fc13c8B624c04430C7356C1C7C8102e2"
+# A sweep costs about 0.03 to 0.06 POL at 2026-10-09 fees, a POL refund 0.005: 1 POL is tens of sweeps. The refund
+# key's float must hold at least one minimum refund (`PAY_MINIMUM_REFUND_USD`, 1 USD) in each coin, or such a refund
+# waits for float for ever: 2 POL (about 0.20 USD) never could (2026-10-14). Sized for a small treasury:
+# the refund key keeps about 2.5 USD of POL (25) and 10 of each stablecoin, and
+# never less than its low mark between top-ups, so the low marks (20 POL, 8 of each) are what must cover a minimum
+# refund, with room for POL's price to halve.
+# `treasury_low` fires below one day of every active key's allowance, about 34 POL, 10 USDC and 10 USDT with two
+# sweepers. Raise them with volume.
+top_ups = [
+    { role = "sweeper", asset_symbol = "POL", low_amount = "0.5", target_amount = "1", daily_allowance_amount = "2" },
+    { role = "refund", asset_symbol = "POL", low_amount = "20", target_amount = "25", daily_allowance_amount = "30" },
+    { role = "refund", asset_symbol = "USDC", low_amount = "8", target_amount = "10", daily_allowance_amount = "10" },
+    { role = "refund", asset_symbol = "USDT", low_amount = "8", target_amount = "10", daily_allowance_amount = "10" },
+]
+
+[chains.polygon_amoy]
+name = "Polygon Amoy"
+chain_id = 80002
+rpc_urls = ["https://polygon-amoy-bor-rpc.publicnode.com", "https://polygon-amoy.drpc.org"]
+explorer_url = "https://amoy.polygonscan.com"
+finality_tag = "finalized"
+# Polygon's blocks take about 2 s; `finalized` trails by 2 to 5 s (Heimdall v2 fast finality,
+# https://docs.polygon.technology/pos/concepts/finality/finality).
+seconds_per_block = "2"
+expected_finality_seconds = 5
+sequencer_uptime_feed = ""
+poll_interval_seconds = 2
+rescan_interval_seconds = 600
+recent_deposit_window_seconds = 86400
+old_deposit_rescan_interval_seconds = 86400
+maximum_price_age_seconds = 300
+price_feed_heartbeat_seconds = 27
+minimum_priority_fee_gwei = 25
+fee_bump_after_seconds = 30
+maximum_fee_per_gas_gwei = 2000
+factory_address = ""
+# Amoy has some feeds now (BTC, ETH, LINK, USDC, USDT, DAI, EUR; https://reference-data-directory.vercel.app/
+# feeds-polygon-testnet-amoy.json, 2026-10-13) but no POL/USD, so prices still come from Polygon mainnet's feeds over a
+# mainnet RPC (prices only).
+price_rpc_urls = ["https://polygon-bor-rpc.publicnode.com", "https://polygon.drpc.org", "https://tenderly.rpc.polygon.community"]
+price_chain_id = 137
+eur_usd_feed = "0x73366Fe0AA0Ded304479862808e02506FE556a98"
+assets = [
+    { symbol = "POL", name = "Polygon Ecosystem Token", decimals = 18, quote_decimals = 4, token_address = "", usd_feed = "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0", minimum_sweep_amount = "0.5" },
+    # Circle's test USDC (https://developers.circle.com/stablecoins/usdc-contract-addresses).
+    { symbol = "USDC", name = "USD Coin", decimals = 6, quote_decimals = 2, token_address = "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582", usd_feed = "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7", usd_peg = true, minimum_sweep_amount = "0.05" },
+]
+
+[chains.polygon_amoy.treasury]
+# No Allowance Module on Amoy (safe-modules-deployments v0.1.1 lists 137 only): no treasury here.
+treasury_safe_address = ""
+allowance_module_address = ""
+safe_singleton_address = "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762"
+safe_proxy_factory_address = "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67"
+safe_fallback_handler_address = "0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99"
+safe_multi_send_call_only_address = "0x9641d764fc13c8B624c04430C7356C1C7C8102e2"
+top_ups = []
+
+# An anvil fork of Polygon mainnet (`anvil --fork-url ... --block-time 1 --slots-in-an-epoch 1`, PLAN.md section 12).
+# A fork keeps chain id 137, so only the key tells it from `polygon`. The factory is deployed per run.
+[chains.local_fork]
+name = "Polygon (local fork)"
+chain_id = 137
+rpc_urls = ["http://127.0.0.1:18545"]
+explorer_url = "https://polygonscan.com"
+finality_tag = "finalized"
+# Polygon's 2 s, not the fork's 1 s block time: the end-to-end run sees the same thresholds in blocks.
+seconds_per_block = "2"
+expected_finality_seconds = 2
+sequencer_uptime_feed = ""
+poll_interval_seconds = 1
+# Short, so the end-to-end flow sees a late payment swept within a minute.
+rescan_interval_seconds = 15
+recent_deposit_window_seconds = 86400
+# A fork run lasts minutes, so old deposits are reread within one too.
+old_deposit_rescan_interval_seconds = 60
+# Cold static addresses are read within half a minute: scenario_static_deposit_address pays one it moved out of the
+# hot tier.
+static_deposit_cold_scan_interval_seconds = 20
+# A fork's feeds stop updating at the fork block and age with the run.
+maximum_price_age_seconds = 31536000
+price_feed_heartbeat_seconds = 31536000
+minimum_priority_fee_gwei = 25
+fee_bump_after_seconds = 20
+maximum_fee_per_gas_gwei = 2000
+factory_address = ""
+price_rpc_urls = []
+price_chain_id = 137
+eur_usd_feed = "0x73366Fe0AA0Ded304479862808e02506FE556a98"
+# The same assets as `polygon`.
+assets = [
+    { symbol = "POL", name = "Polygon Ecosystem Token", decimals = 18, quote_decimals = 4, token_address = "", usd_feed = "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0", minimum_sweep_amount = "0.5" },
+    { symbol = "USDC", name = "USD Coin", decimals = 6, quote_decimals = 2, token_address = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359", usd_feed = "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7", usd_peg = true, minimum_sweep_amount = "0.05" },
+    { symbol = "USDT", name = "Tether USD", decimals = 6, quote_decimals = 2, token_address = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", usd_feed = "0x0A6513e40db6EB1b165753AD52E80663aeA50545", usd_peg = true, minimum_sweep_amount = "0.05" },
+    { symbol = "USDC.e", name = "USD Coin (PoS)", decimals = 6, quote_decimals = 2, token_address = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", usd_feed = "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7", usd_peg = true, minimum_sweep_amount = "0.05" },
+    { symbol = "WETH", name = "Wrapped Ether", decimals = 18, quote_decimals = 6, token_address = "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", usd_feed = "0xF9680D99D6C9589e2a93a78A04A279e509205945", minimum_sweep_amount = "0.00002" },
+    { symbol = "WBTC", name = "Wrapped BTC", decimals = 8, quote_decimals = 7, token_address = "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6", usd_feed = "0xc907E116054Ad103354f2D350FD2514433D57F6f", minimum_sweep_amount = "0.0000006" },
+    { symbol = "DAI", name = "Dai Stablecoin", decimals = 18, quote_decimals = 2, token_address = "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063", usd_feed = "0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D", usd_peg = true, minimum_sweep_amount = "0.05" },
+    { symbol = "LINK", name = "Chainlink", decimals = 18, quote_decimals = 4, token_address = "0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39", usd_feed = "0xd9FFdb71EbE7496cC440152d43986Aae0AB76665", minimum_sweep_amount = "0.004" },
+    { symbol = "AAVE", name = "Aave", decimals = 18, quote_decimals = 5, token_address = "0xD6DF932A45C0f255f85145f286eA0b292B21C90B", usd_feed = "0x72484B12719E23115761D5DA1646945632979bB6", minimum_sweep_amount = "0.0003" },
+    { symbol = "UNI", name = "Uniswap", decimals = 18, quote_decimals = 4, token_address = "0xb33EaAd8d922B1083446DC23f610c2567fB5180f", usd_feed = "0xdf0Fb4e4F928d2dCB76f438575fDD8682386e13C", minimum_sweep_amount = "0.006" },
+]
+
+[chains.local_fork.treasury]
+treasury_safe_address = ""
+allowance_module_address = "0xAA46724893dedD72658219405185Fb0Fc91e091C"
+safe_singleton_address = "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762"
+safe_proxy_factory_address = "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67"
+safe_fallback_handler_address = "0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99"
+safe_multi_send_call_only_address = "0x9641d764fc13c8B624c04430C7356C1C7C8102e2"
+# Larger than `polygon`'s, as e2e/operator_key_scenarios.py expects; the e2e run sets PAY_TREASURY_SAFE_ADDRESS_LOCAL_FORK
+# to the Safe it makes.
+top_ups = [
+    { role = "sweeper", asset_symbol = "POL", low_amount = "1", target_amount = "3", daily_allowance_amount = "10" },
+    { role = "refund", asset_symbol = "POL", low_amount = "5", target_amount = "15", daily_allowance_amount = "30" },
+    { role = "refund", asset_symbol = "USDC", low_amount = "2", target_amount = "10", daily_allowance_amount = "20" },
+    { role = "refund", asset_symbol = "USDT", low_amount = "2", target_amount = "10", daily_allowance_amount = "20" },
+]
+
+# Arbitrum One (PLAN.md section 15; checked 2026-10-14).
+#
+# RPC, keyless, measured 2026-10-14 (limits not documented in the sources checked unless a URL is given):
+# - arb1.arbitrum.io/rpc (Arbitrum's official endpoint, https://docs.arbitrum.io/build-decentralized-apps/reference/
+#   node-providers): eth_getLogs over a range of 2,000,000 blocks back passes while a reply holds at most 10,000 logs
+#   ("logs matched by query exceeds limit of 10000", -32000, which the watcher takes as a range refusal and halves);
+#   not an archive for state (a balance 1,000,000 blocks back: "missing trie node"); batches of 50 blockNumber calls pass,
+#   but a batch of 50 full blocks answered HTTP 429, which sets the endpoint aside for a while.
+# - publicnode: eth_getLogs over at most about 100 blocks ("Archive requests require a personal token." past 128),
+#   batches of 50 pass; the rest is pruned.
+# - dRPC: eth_getLogs over at most 101 blocks (the same "ranges over 10000 blocks are not supported on free plan" as
+#   on Polygon), batches of at most 3 (`JSON_RPC_BATCH_SIZE_BY_HOST`).
+# The 100-block floor of the watcher's log range (`MINIMUM_LOG_RANGE_BLOCKS`) is what these two take; the first serves
+# the tip-following order and a catch-up.
+#
+# Feeds: Chainlink's directory for Arbitrum One (https://reference-data-directory.vercel.app/
+# feeds-ethereum-mainnet-arbitrum-1.json, 2026-10-14): ETH/USD 0x639F... heartbeat 1755 s deviation 0.05%, USDC/USD
+# 0x5083... and USDT/USD 0x3f3f... heartbeat 255 s deviation 0.1%, EUR/USD 0xA14d... heartbeat 3600 s deviation 0.1%;
+# all `feedCategory` "low", 8 decimals, `description()` matched on chain. Observed over the latest 1,500 rounds of each:
+# the longest gap between updates was ETH/USD 1262 s, USDC/USD and USDT/USD 274 s, EUR/USD 3690 s (it updates on its
+# hourly heartbeat through weekends too). Each limit below is the feed's heartbeat plus about five minutes for the age
+# a price may have (Polygon's tolerance is five minutes over a 27 s heartbeat); the stale-feed alert is the heartbeat
+# plus the minute's grace, EUR/USD's counted from 3660 s since its updates run up to 90 s late.
+# ARB/USD, WBTC/USD, DAI/USD and BTC/USD feeds on Arbitrum all have an 86400 s heartbeat (the same directory), so by
+# the asset rule (a fast heartbeat: one stale feed refuses every price of the chain) they are not listed.
+#
+# Fees: the base fee was 0.02 gwei and `eth_maxPriorityFeePerGas` answered 0 on all three endpoints; the sequencer orders
+# first come, first served, so a tip buys nothing (https://docs.arbitrum.io/learn-more/faq). `maximum_fee_per_gas_gwei`
+# 1 is 50 times that base fee: a refund (about 40,000 gas, its estimate including the L1 data fee as gas) costs at most
+# 0.00004 ETH at the cap. `eth_estimateGas` of a plain transfer answered 24,296 gas (21,000 plus the L1 component), so a
+# native transfer never gets the fixed 21,000 limit here (`gas_limit_of`).
+#
+# `finalized`: the batch carrying the block was posted to Ethereum and reached Ethereum's `finalized` block, "approximate
+# hard-finality latency: time to post the batch, plus Ethereum finality" (https://docs.arbitrum.io/how-arbitrum-works/
+# reference/finality-and-reorgs); the three endpoints agreed on it and it trailed `latest` by 1003 s (about 4,000 blocks)
+# on 2026-10-14, hence 1020 s here. `safe` is not used (PLAN.md section 15).
+# The L2 Sequencer Uptime Feed is Chainlink's address for Arbitrum One
+# (https://docs.chain.link/data-feeds/l2-sequencer-feeds): answer 0 up, 1 down, `startedAt` 0 while uninitialized,
+# one hour of grace after it is back.
+[chains.arbitrum]
+name = "Arbitrum One"
+chain_id = 42161
+rpc_urls = [
+    "https://arb1.arbitrum.io/rpc",
+    "https://arbitrum-one-rpc.publicnode.com",
+    "https://arbitrum.drpc.org",
+]
+explorer_url = "https://arbiscan.io"
+finality_tag = "finalized"
+seconds_per_block = "0.25"
+expected_finality_seconds = 1020
+sequencer_uptime_feed = "0xFdB631F5EE196F0ed6FAa767959853A9F217697D"
+poll_interval_seconds = 2
+rescan_interval_seconds = 600
+recent_deposit_window_seconds = 86400
+old_deposit_rescan_interval_seconds = 86400
+maximum_price_age_seconds = 3900
+price_feed_heartbeat_seconds = 3660
+minimum_priority_fee_gwei = "0"
+fee_bump_after_seconds = 30
+maximum_fee_per_gas_gwei = "1"
+# Deployed 2026-10-14 by the refund key (nonce 0, so the same address as on Polygon), block 0x1eaecd76.
+factory_address = "0x91749BD4e0Db4050D4F0B07f0E8f929Da552a661"
+price_rpc_urls = []
+price_chain_id = 42161
+eur_usd_feed = "0xA14d53bC1F1c0F31B4aA3BD109344E5009051a84"
+assets = [
+    # 0.05 USD is about 0.00002 ETH at the ETH/USD price of 2026-10-14 (about 2,417 USD); quotes round up to 6 places.
+    { symbol = "ETH", name = "Ether", decimals = 18, quote_decimals = 6, token_address = "", usd_feed = "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612", price_feed_heartbeat_seconds = 1755, maximum_price_age_seconds = 2100, minimum_sweep_amount = "0.00002" },
+    # Circle's native USDC (https://developers.circle.com/stablecoins/usdc-contract-addresses; on-chain symbol() "USDC",
+    # name() "USD Coin", 6 decimals, 2026-10-14).
+    { symbol = "USDC", name = "USD Coin", decimals = 6, quote_decimals = 2, token_address = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", usd_feed = "0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3", price_feed_heartbeat_seconds = 255, maximum_price_age_seconds = 600, usd_peg = true, minimum_sweep_amount = "0.05" },
+    # USDT0, Tether's omnichain USDT (on-chain symbol() and name() are "USD₮0", 6 decimals, 2026-10-14), shown as
+    # "Tether USD" as on Polygon; the API symbol stays USDT. The USDT/USD feed.
+    { symbol = "USDT", name = "Tether USD", decimals = 6, quote_decimals = 2, token_address = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", usd_feed = "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7", price_feed_heartbeat_seconds = 255, maximum_price_age_seconds = 600, usd_peg = true, minimum_sweep_amount = "0.05" },
+]
+
+[chains.arbitrum.treasury]
+# Empty until the owner makes the treasury Safe (`treasury create-safe --chain arbitrum`) and sets it up.
+treasury_safe_address = ""
+# Safe's Allowance Module v0.1.1 lists 42161 at this address
+# (https://github.com/safe-global/safe-modules-deployments, src/assets/allowance-module/v0.1.1/allowance-module.json),
+# and Safe v1.4.1 lists 42161 as "canonical" for SafeL2, the proxy factory, the fallback handler and MultiSendCallOnly
+# (https://github.com/safe-global/safe-deployments, src/assets/v1.4.1): the same addresses as on Polygon, each with code
+# on Arbitrum One (eth_getCode, 2026-10-14).
+allowance_module_address = "0xAA46724893dedD72658219405185Fb0Fc91e091C"
+safe_singleton_address = "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762"
+safe_proxy_factory_address = "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67"
+safe_fallback_handler_address = "0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99"
+safe_multi_send_call_only_address = "0x9641d764fc13c8B624c04430C7356C1C7C8102e2"
+# PLAN.md section 15: the refund key keeps 0.003 ETH (about 7 USD, a few hundred refunds' gas) and 10 of each stablecoin;
+# its low marks cover a minimum refund (1 USD) in each coin with room for ETH to halve. A sweeper's gas is a fraction of
+# a cent.
+top_ups = [
+    { role = "sweeper", asset_symbol = "ETH", low_amount = "0.0005", target_amount = "0.001", daily_allowance_amount = "0.002" },
+    { role = "refund", asset_symbol = "ETH", low_amount = "0.0015", target_amount = "0.003", daily_allowance_amount = "0.005" },
+    { role = "refund", asset_symbol = "USDC", low_amount = "8", target_amount = "10", daily_allowance_amount = "10" },
+    { role = "refund", asset_symbol = "USDT", low_amount = "8", target_amount = "10", daily_allowance_amount = "10" },
+]
+
+# Arbitrum Sepolia, the sandbox's second testnet (PLAN.md section 16; 2026-10-21). Chain id, the official endpoint and
+# the explorer from https://docs.arbitrum.io/for-devs/dev-tools-and-resources/chain-info; publicnode and dRPC answered
+# the same `latest` and `finalized` blocks on 2026-10-21. `finalized` trailed `latest` by about 1,240 s that day
+# (batch posted to Ethereum Sepolia, then Sepolia finality), so the payer's screen says about 21 minutes.
+[chains.arbitrum_sepolia]
+name = "Arbitrum Sepolia"
+chain_id = 421614
+rpc_urls = [
+    "https://sepolia-rollup.arbitrum.io/rpc",
+    "https://arbitrum-sepolia-rpc.publicnode.com",
+    "https://arbitrum-sepolia.drpc.org",
+]
+explorer_url = "https://sepolia.arbiscan.io"
+finality_tag = "finalized"
+seconds_per_block = "0.25"
+expected_finality_seconds = 1260
+poll_interval_seconds = 2
+rescan_interval_seconds = 600
+recent_deposit_window_seconds = 86400
+old_deposit_rescan_interval_seconds = 86400
+minimum_priority_fee_gwei = "0"
+fee_bump_after_seconds = 30
+# eth_gasPrice answered 0.02 gwei on 2026-10-21.
+maximum_fee_per_gas_gwei = "1"
+factory_address = ""
+# Priced like Amoy: Arbitrum One mainnet's feeds over mainnet endpoints (prices only), with mainnet's L2 Sequencer
+# Uptime Feed read in the same call. Chainlink's Arbitrum Sepolia directory
+# (https://reference-data-directory.vercel.app/feeds-ethereum-testnet-sepolia-arbitrum-1.json, 2026-10-21) has ETH/USD
+# (120 s heartbeat), USDC/USD (86,400 s) and USDT/USD, but no EUR/USD and no sequencer uptime feed, so the testnet's
+# own feeds cannot quote a EUR invoice; mainnet's are the same feeds production quotes with.
+price_rpc_urls = ["https://arb1.arbitrum.io/rpc", "https://arbitrum-one-rpc.publicnode.com", "https://arbitrum.drpc.org"]
+price_chain_id = 42161
+sequencer_uptime_feed = "0xFdB631F5EE196F0ed6FAa767959853A9F217697D"
+maximum_price_age_seconds = 3900
+price_feed_heartbeat_seconds = 3660
+eur_usd_feed = "0xA14d53bC1F1c0F31B4aA3BD109344E5009051a84"
+assets = [
+    { symbol = "ETH", name = "Ether", decimals = 18, quote_decimals = 6, token_address = "", usd_feed = "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612", price_feed_heartbeat_seconds = 1755, maximum_price_age_seconds = 2100, minimum_sweep_amount = "0.00002" },
+    # Circle's test USDC (https://developers.circle.com/stablecoins/usdc-contract-addresses; on-chain symbol() "USDC",
+    # name() "USD Coin", 6 decimals, 2026-10-21), priced off mainnet USDC/USD.
+    { symbol = "USDC", name = "USD Coin", decimals = 6, quote_decimals = 2, token_address = "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d", usd_feed = "0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3", price_feed_heartbeat_seconds = 255, maximum_price_age_seconds = 600, usd_peg = true, minimum_sweep_amount = "0.05" },
+]
+
+[chains.arbitrum_sepolia.treasury]
+# No treasury on the sandbox: its keys are funded from faucets by hand.
+treasury_safe_address = ""
+allowance_module_address = ""
+safe_singleton_address = "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762"
+safe_proxy_factory_address = "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67"
+safe_fallback_handler_address = "0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99"
+safe_multi_send_call_only_address = "0x9641d764fc13c8B624c04430C7356C1C7C8102e2"
+top_ups = []
+
+# An anvil fork of Arbitrum One for the end-to-end run (`PAY_E2E_FORK_CHAIN=arbitrum` or `mixed`, PLAN.md section 12):
+# chain id 42161 either way, only the key tells it from `arbitrum`. Read on its own the fork's feeds stop at the fork
+# block, so every age limit is huge (and the assets carry none of their own); `PAY_PRICE_RPC_URLS_LOCAL_ARBITRUM_FORK`
+# reads the live feeds over public endpoints instead (the mixed stack does). The factory is deployed per run. A fork
+# emulates no L1 data fee, so gas figures are indicative.
+[chains.local_arbitrum_fork]
+name = "Arbitrum One (local fork)"
+chain_id = 42161
+rpc_urls = ["http://127.0.0.1:18545"]
+explorer_url = "https://arbiscan.io"
+finality_tag = "finalized"
+# anvil's `--block-time 1`, and `finalized` two blocks behind `latest` (`--slots-in-an-epoch 1`).
+seconds_per_block = "1"
+expected_finality_seconds = 2
+sequencer_uptime_feed = "0xFdB631F5EE196F0ed6FAa767959853A9F217697D"
+poll_interval_seconds = 1
+rescan_interval_seconds = 15
+recent_deposit_window_seconds = 86400
+old_deposit_rescan_interval_seconds = 60
+maximum_price_age_seconds = 31536000
+price_feed_heartbeat_seconds = 31536000
+minimum_priority_fee_gwei = "0"
+fee_bump_after_seconds = 20
+maximum_fee_per_gas_gwei = "1"
+factory_address = ""
+price_rpc_urls = []
+price_chain_id = 42161
+eur_usd_feed = "0xA14d53bC1F1c0F31B4aA3BD109344E5009051a84"
+assets = [
+    { symbol = "ETH", name = "Ether", decimals = 18, quote_decimals = 6, token_address = "", usd_feed = "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612", minimum_sweep_amount = "0.00002" },
+    { symbol = "USDC", name = "USD Coin", decimals = 6, quote_decimals = 2, token_address = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", usd_feed = "0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3", usd_peg = true, minimum_sweep_amount = "0.05" },
+    { symbol = "USDT", name = "Tether USD", decimals = 6, quote_decimals = 2, token_address = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", usd_feed = "0x3f3f5dF88dC9F13eac63DF89EC16ef6e7E25DdE7", usd_peg = true, minimum_sweep_amount = "0.05" },
+]
+
+[chains.local_arbitrum_fork.treasury]
+treasury_safe_address = ""
+allowance_module_address = "0xAA46724893dedD72658219405185Fb0Fc91e091C"
+safe_singleton_address = "0x29fcB43b46531BcA003ddC8FCB67FFE91900C762"
+safe_proxy_factory_address = "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67"
+safe_fallback_handler_address = "0xfd0732Dc9E303f09fCEf3a7388Ad10A83459Ec99"
+safe_multi_send_call_only_address = "0x9641d764fc13c8B624c04430C7356C1C7C8102e2"
+# The Polygon fork's top-ups, the same numbers in ETH, as e2e/operator_key_scenarios.py expects; the e2e run sets
+# PAY_TREASURY_SAFE_ADDRESS_LOCAL_ARBITRUM_FORK to the Safe it makes.
+top_ups = [
+    { role = "sweeper", asset_symbol = "ETH", low_amount = "1", target_amount = "3", daily_allowance_amount = "10" },
+    { role = "refund", asset_symbol = "ETH", low_amount = "5", target_amount = "15", daily_allowance_amount = "30" },
+    { role = "refund", asset_symbol = "USDC", low_amount = "2", target_amount = "10", daily_allowance_amount = "20" },
+    { role = "refund", asset_symbol = "USDT", low_amount = "2", target_amount = "10", daily_allowance_amount = "20" },
+]
+
+# Monero mainnet (PLAN.md section 14). Nodes from https://monero.fail (its nodes.json, 2026-10-14): restricted RPC, https
+# where offered, one per operator; each answered get_info as mainnet, synchronized and restricted on 2026-10-14. A
+# curated list may replace them. Free public nodes can lie or withhold (wallets do not verify proof of work), so a
+# credit waits for a second operator to agree.
+[chains.monero]
+kind = "monero"
+name = "Monero"
+network = "mainnet"
+explorer_url = "https://xmrchain.net"
+nodes = [
+    { url = "https://anstee.dev:18081", operator = "anstee.dev" },
+    { url = "https://xmr.marritt.ca", operator = "marritt.ca" },
+    { url = "https://mainnet.xmr.kernal.eu:18089", operator = "kernal.eu" },
+    { url = "https://xmr.cryptostorm.is:18081", operator = "cryptostorm.is" },
+]
+# Ten confirmations: the consensus spend lock (https://web.getmonero.org/resources/moneropedia/unlocktime.html).
+confirmations_final = 10
+# Money reaching an invoice closed less than a day ago is a late payment (flagged, the account told); the sidecar
+# keeps scanning for a replaced wallet that long after its last invoice closed.
+recent_deposit_window_seconds = 86400
+# A block comes about every two minutes; the scanner also reads the pool.
+poll_interval_seconds = 10
+# The chain's limits serve EUR/USD (a 27 s heartbeat feed like the EVM chains'). XMR/USD sets its own below.
+maximum_price_age_seconds = 300
+price_feed_heartbeat_seconds = 27
+price_rpc_urls = ["https://polygon-bor-rpc.publicnode.com", "https://polygon.drpc.org", "https://tenderly.rpc.polygon.community"]
+price_chain_id = 137
+# Reads the feeds over `polygon`'s own client when that chain is enabled (`local_fork` has chain id 137 too but its
+# feeds stand still, so it is never named here); `price_rpc_urls` only when it is not.
+price_chain_key = "polygon"
+eur_usd_feed = "0x73366Fe0AA0Ded304479862808e02506FE556a98"
+# XMR/USD is the slow kind of feed: Chainlink's Polygon directory lists heartbeat 86400 s and deviation threshold 1%
+# (https://reference-data-directory.vercel.app/feeds-matic-mainnet.json, feedCategory "low", checked 2026-10-14; a
+# live read was 13,578 s old). It updates once a day or on a 1% move, so a quote may sit up to 1% off the market and
+# the seller carries that drift. Its answers are refused past a day plus 25 minutes (90000 s), and reconcile flags it
+# past 86400 s plus its grace minute.
+assets = [
+    { symbol = "XMR", name = "Monero", decimals = 12, quote_decimals = 6, token_address = "", usd_feed = "0xBE6FB0AB6302B693368D0E9001fAF77ecc6571db", price_feed_heartbeat_seconds = 86400, maximum_price_age_seconds = 90000, minimum_sweep_amount = "0" },
+]
+
+# Monero stagenet, for the end-to-end run (coins from https://stagenet-faucet.xmr-tw.org/). Nodes that answered on
+# 2026-10-14 (PLAN.md section 14); node3.monerodevs.org answered over http only.
+[chains.monero_stagenet]
+kind = "monero"
+name = "Monero (stagenet)"
+network = "stagenet"
+explorer_url = "https://stagenet.xmrchain.net"
+nodes = [
+    { url = "http://node3.monerodevs.org:38089", operator = "monerodevs.org" },
+    { url = "https://stagenet.xmr.kernal.eu:38089", operator = "kernal.eu" },
+    { url = "http://stagenet.xmr-tw.org:38081", operator = "xmr-tw.org" },
+    { url = "http://xmr-lux.boldsuck.org:38081", operator = "boldsuck.org" },
+]
+confirmations_final = 2
+recent_deposit_window_seconds = 86400
+poll_interval_seconds = 5
+maximum_price_age_seconds = 300
+price_feed_heartbeat_seconds = 27
+price_rpc_urls = ["https://polygon-bor-rpc.publicnode.com", "https://polygon.drpc.org", "https://tenderly.rpc.polygon.community"]
+price_chain_id = 137
+price_chain_key = "polygon"
+eur_usd_feed = "0x73366Fe0AA0Ded304479862808e02506FE556a98"
+# XMR/USD: the slow feed of `chains.monero` (24 h heartbeat or 1% deviation), the same limits.
+assets = [
+    { symbol = "XMR", name = "Monero", decimals = 12, quote_decimals = 6, token_address = "", usd_feed = "0xBE6FB0AB6302B693368D0E9001fAF77ecc6571db", price_feed_heartbeat_seconds = 86400, maximum_price_age_seconds = 90000, minimum_sweep_amount = "0" },
+]

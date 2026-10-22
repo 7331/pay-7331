@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- pay·7331's app icon (2026-10-12): a "p" and the brand's middle dot, drawn in strokes so no font is needed, on
+       the site's neutral palette (index.css: primary #171717, primary-foreground #fafafa, dark muted-foreground
+       #a1a1a1). Full bleed, no transparency: iOS rounds the corners itself and fills transparency with black
+       (https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html).
+       The mark stays inside the central circle of radius 40% that a maskable icon keeps
+       (https://www.w3.org/TR/appmanifest/#icon-masks), so the same image serves as "maskable".
+       This file is also the SVG favicon. The PNGs beside it are rendered from it with librsvg, from this folder:
+         rsvg-convert -w 180 -h 180 app_icon.svg -o apple_touch_icon_180.png
+         rsvg-convert -w 192 -h 192 app_icon.svg -o app_icon_192.png
+         rsvg-convert -w 512 -h 512 app_icon.svg -o app_icon_512.png
+         rsvg-convert -w 32 -h 32 app_icon.svg -o favicon_32.png -->
+  <rect width="512" height="512" fill="#171717"/>
+  <g transform="translate(-37 -17)">
+    <g fill="none" stroke="#fafafa" stroke-width="52" stroke-linecap="round">
+      <path d="M168 238V398"/>
+      <circle cx="258" cy="238" r="90"/>
+    </g>
+    <circle cx="420" cy="238" r="24" fill="#a1a1a1"/>
+  </g>
+</svg>

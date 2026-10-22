@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // shadcn/ui components are vendored whole: a used component keeps the parts this app does not
+  // import yet (DialogFooter, buttonVariants), so `shadcn add` and diffs against the registry stay clean. Unused files
+  // there are still reported: a component nobody imports is deleted.
+  // uv runs the backend's OpenAPI dump in `generate:api-types`; it is a system tool, not a package dependency.
+  "ignoreBinaries": ["uv"],
+  "ignoreIssues": {
+    "src/components/ui/*.tsx": ["exports"],
+    // Generated from the OpenAPI document: it exports every part of it (paths, operations), and the pages read only
+    // the schemas through src/lib/api_types.ts.
+    "src/lib/generated/api_schema.ts": ["types"]
+  }
+}

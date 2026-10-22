@@ -1,0 +1,48 @@
+[package]
+name = "xmr-scanner"
+version = "0.1.0"
+edition = "2021"
+# monero-wallet 0.2.0 declares rust-version 1.89.
+rust-version = "1.89"
+publish = false
+description = "pay-7331's Monero scanner sidecar (PLAN.md section 14): wallet checks, subaddresses, and the scan loop"
+
+[dependencies]
+# monero-oxide (MIT; https://github.com/monero-oxide/monero-oxide, crates published 2026-07-31, checked on crates.io
+# 2026-10-14). monero-wallet 0.2.0 (https://crates.io/crates/monero-wallet) scans: ViewPair, Scanner, subaddresses,
+# amount decryption and the commitment check; it re-exports monero-oxide 0.1.0 (blocks, transactions, ed25519) and
+# monero-address 0.1.0 (Base58 with Monero's checksum, network prefixes).
+monero-wallet = "=0.2.0"
+# The daemon transport the monero-oxide repository recommends (https://crates.io/crates/monero-simple-request-rpc,
+# 0.1.0): HTTP(S) to monerod's restricted RPC through monero-daemon-rpc 0.2.0, one connection per node (no pool).
+# TLS trusts the image's native root store first (simple-request 0.3.2, src/lib.rs:81) and falls back to
+# `webpki-roots`' bundled Mozilla store only when the image has none (src/lib.rs:89-91).
+monero-simple-request-rpc = { version = "=0.1.0", features = ["webpki-roots"] }
+# The interface types the prelude leaves out (PrunedTransactionWithPrunableHash checks a pool transaction's hash).
+monero-interface = "=0.2.0"
+
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "signal", "sync", "net", "io-util"] }
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio", "json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "1"
+tokio-postgres = "0.7"
+hex = "0.4"
+zeroize = { version = "1", features = ["serde"] }
+# The sealing of app/shared/sealed_bytes.py: HKDF-SHA256 then AES-256-GCM (RustCrypto, the 0.10/0.12 lines).
+aes-gcm = "0.10"
+hkdf = "0.12"
+sha2 = "0.10"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+
+# A panic in a chain's scan task aborts the process, so Docker restarts it, instead of the HTTP side serving a
+# snapshot no loop updates any more.
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+lto = "thin"
+codegen-units = 4
+strip = true
+panic = "abort"

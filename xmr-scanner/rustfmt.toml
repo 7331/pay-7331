@@ -1,0 +1,2 @@
+# The repository's line length (backend ruff: 120).
+max_width = 120

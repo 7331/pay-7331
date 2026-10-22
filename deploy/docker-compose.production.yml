@@ -1,0 +1,79 @@
+# pay.7331.org: production override of the root docker-compose.yml, Compose project `pay-7331`. Run it through
+# deploy/deploy.sh, which passes --env-file "$PAY_DEPLOY_ENVIRONMENT_FILE" (never in git) for interpolation and exports
+# the deploy/host_paths.env variables this file reads (Compose interpolates env_file paths and network names:
+# https://docs.docker.com/reference/compose-file/interpolation/).
+# The reverse proxy reaches pay-7331-api:8000 over the shared proxy network (PAY_REVERSE_PROXY_NETWORK, external;
+# deploy/Caddyfile.pay); no host port is published. Postgres and Redis stay on the stack's internal network.
+name: pay-7331
+
+x-production-application: &production-application
+  image: pay-7331-backend:production
+  # Each idles near 140 MB; the cap keeps a runaway process off the RAM other services on the host need.
+  mem_limit: 1g
+  env_file: !override [{ path: "${PAY_DEPLOY_ENVIRONMENT_FILE:?}", required: true }]
+  logging: &production-logging
+    driver: json-file
+    options: { max-size: 20m, max-file: "5" }
+
+services:
+  postgres:
+    container_name: pay-7331-postgres
+    # postgres:18-alpine plus WAL-G (deploy/postgres/Dockerfile). Every WAL segment goes to R2, sealed, and
+    # archive_timeout forces a segment switch each minute there was any activity, so a dead disk loses about the last
+    # minute: "archive_timeout settings of a minute or so are usually reasonable"
+    # (https://www.postgresql.org/docs/18/continuous-archiving.html). Changing archive_mode needs a server restart
+    # (https://www.postgresql.org/docs/18/runtime-config-wal.html#GUC-ARCHIVE-MODE); compose recreates the container
+    # when this command or the image changes.
+    build: { context: deploy/postgres }
+    image: pay-7331-postgres:production
+    env_file: [{ path: "${PAY_WAL_ARCHIVE_SETTINGS_FILE:?}", required: true }]
+    command:
+      - postgres
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=wal-g wal-push %p
+      - -c
+      - archive_timeout=60
+      # Read only during recovery, when the data directory holds recovery.signal: a disk restore is `wal-g
+      # backup-fetch` into the volume, `touch recovery.signal`, then this service as usual
+      # (https://www.postgresql.org/docs/18/runtime-config-wal.html#GUC-RESTORE-COMMAND).
+      - -c
+      - restore_command=wal-g wal-fetch %f %p
+    # wal-push and the base backup reach R2 from inside this container, so Postgres joins `egress` (outbound only,
+    # no published port). Locally and in e2e it stays on `internal` alone.
+    networks: [internal, egress]
+    # A fast shutdown (the image's STOPSIGNAL SIGINT) lets the archiver push what is left; Docker's default 10 s could
+    # kill it during an upload.
+    stop_grace_period: 60s
+    logging: *production-logging
+
+  redis:
+    container_name: pay-7331-redis
+    logging: *production-logging
+
+  migrate:
+    <<: *production-application
+
+  api:
+    <<: *production-application
+    container_name: pay-7331-api
+    ports: !reset []
+    networks: [internal, egress, reverse_proxy]
+
+  watcher:
+    <<: *production-application
+    container_name: pay-7331-watcher
+
+  # Only with `--profile monero` (PLAN.md section 14). Its own image, no env_file: compose interpolates its two secrets
+  # from --env-file.
+  xmr-scanner:
+    container_name: pay-7331-xmr-scanner
+    image: pay-7331-xmr-scanner:production
+    mem_limit: 256m
+    logging: *production-logging
+
+networks:
+  reverse_proxy:
+    name: "${PAY_REVERSE_PROXY_NETWORK:?}"
+    external: true

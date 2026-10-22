@@ -1,0 +1,14 @@
+# Hourly at :50 UTC. Each run dumps, proves WAL archiving works (a segment switch it waits to see in R2) and takes the
+# daily full base backup when due, so a stalled WAL archive shows within the hour. RandomizedDelaySec spreads the start;
+# Persistent catches up a missed run after downtime: https://github.com/systemd/systemd/blob/main/man/systemd.timer.xml
+[Unit]
+Description=Hourly pay-7331 Postgres backup
+
+[Timer]
+OnCalendar=*-*-* *:50:00 UTC
+RandomizedDelaySec=5m
+Persistent=true
+Unit=pay-7331-backup.service
+
+[Install]
+WantedBy=timers.target

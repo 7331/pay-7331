@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <!--
+      Light and dark follow prefers-color-scheme: these tags by their media queries, and
+      theme_before_first_paint.js puts the matching class on <html> before anything paints.
+    -->
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <script src="/theme_before_first_paint.js"></script>
+    <meta name="referrer" content="no-referrer" />
+    <meta name="robots" content="noindex" />
+    <!--
+      Home Screen install (2026-10-12): the manifest's scope is the whole site and it opens /activity (a signed-out
+      visitor gets the passkey sign-in there); it lives in public/ like the icons (public/app_icons/app_icon.svg says
+      how the PNGs are made). Safari's Home Screen icon is the 180 px apple-touch-icon
+      (https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html).
+    -->
+    <link rel="manifest" href="/web_app_manifest.webmanifest" />
+    <link rel="icon" href="/app_icons/app_icon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/app_icons/favicon_32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/app_icons/apple_touch_icon_180.png" sizes="180x180" />
+    <title>pay·7331</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>This page needs JavaScript.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

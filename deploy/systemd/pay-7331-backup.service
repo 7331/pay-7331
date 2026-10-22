@@ -1,0 +1,18 @@
+# Hourly off-box backup of the pay-7331 Postgres to R2. Installed copies of the scripts live in /opt/pay-7331-backup,
+# so a checkout on another branch never changes what runs at night.
+# Type=oneshot with no RemainAfterExit: a job that finishes; the timer repeats it.
+[Unit]
+Description=pay-7331 Postgres backup to R2
+After=docker.service
+Requires=docker.service
+# A failed run leaves a journal line and a marker file the next successful run clears.
+OnFailure=pay-7331-backup-failed.service
+
+[Service]
+Type=oneshot
+# The host paths the script needs (deploy/systemd/backup.env.example); paths only, nothing secret in a unit file.
+EnvironmentFile=/etc/pay-7331/backup.env
+ExecStart=/opt/pay-7331-backup/backup_postgres_to_r2.sh
+# A oneshot has no start timeout by default; a hung pg_dump or upload would sit "activating" forever,
+# with no OnFailure. A run takes seconds today; an hour is a hang.
+TimeoutStartSec=1h

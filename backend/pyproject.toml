@@ -1,0 +1,305 @@
+[project]
+name = "pay-7331-backend"
+version = "0.1.0"
+description = "pay-7331: invoice API, chain watcher and CLI of a self-hosted crypto payment gateway on Polygon"
+requires-python = ">=3.15,<3.16"
+dependencies = [
+    # web3's HTTP transport: the RPC client reads a 429's status and Retry-After off its ClientResponseError.
+    "aiohttp>=3.14",
+    "alembic>=1.20.0",
+    # Request correlation ids: its contextvar carries the id app/shared/correlation.py mints to every log line.
+    "asgi-correlation-id>=5.0.1",
+    # Account webhooks: the signing secrets sealed at rest with AES-256-GCM (payments/account_webhooks).
+    "cryptography>=50.0.2",
+    # ABI encoding and decoding of Multicall3, Chainlink and factory calls (web3's own codec).
+    "eth-abi>=6.0.0",
+    # EIP-1559 signing and EIP-191 (personal_sign) recovery (PLAN.md sections 5 and 6).
+    "eth-account>=0.14.0",
+    "eth-typing>=6.0.0",
+    "eth-utils>=6.0.0",
+    "fastapi>=0.143.0",
+    # eth-account's TypedTransaction takes HexBytes: a relayed top-up's replacement resends its stored call.
+    "hexbytes>=2.0.0",
+    "httpx>=0.28.1",
+    "psycopg[binary]>=3.3.6",
+    "pydantic>=2.14.0",
+    "pydantic-settings>=2.15.0",
+    "redis>=8.1.0",
+    # The invoice QR codes as SVG.
+    "segno>=1.6.6",
+    "sqlalchemy[asyncio]>=2.1.4",
+    # Account webhooks: the Standard Webhooks spec's own signer (v1, HMAC-SHA256); e2e verifies with it too.
+    "standardwebhooks>=1.1.0",
+    # Imported directly by the ASGI middleware; floor at the release that patched the BadHost auth-bypass CVEs.
+    "starlette>=1.7.0",
+    "structlog>=26.1.0",
+    "typer>=0.27.3",
+    "uvicorn[standard]>=0.54.0",
+    # AsyncWeb3 over AsyncHTTPProvider with batch requests (PLAN.md section 1).
+    "web3>=8.0.0",
+    # Account passkeys: WebAuthn options and response checks. Pinned exactly: it guards every sign-in.
+    "webauthn==3.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "deptry>=0.25.1",
+    "import-linter>=2.15",
+    # e2e/browser_flow.py: decodes the invoice page's QR from a screenshot.
+    "opencv-python-headless>=5.0.0.93",
+    # e2e/browser_flow.py. Pinned exactly: 1.63.0 drives Chromium build 1243, the one in ~/.cache/ms-playwright.
+    "playwright==1.63.0",
+    "ruff>=0.16.10",
+    # Pinned exactly: ty is pre-1.0 and any 0.0.x release may change what the gate accepts.
+    "ty==0.0.85",
+    "vulture>=2.16",
+    "xenon>=0.9.3",
+]
+
+[tool.uv]
+package = false
+# A prerelease only where this file names one: uv's default once moved pydantic to a beta.
+prerelease = "explicit"
+
+[tool.ruff]
+line-length = 120
+# py313, not py314: on py314 the formatter writes PEP 758 `except A, B:`, which semgrep cannot
+# parse yet, and the semgrep house rules (semgrep/house-rules.yaml) would skip those files.
+target-version = "py313"
+# Fixtures proving the semgrep house rules fire: they hold the banned idioms on purpose.
+extend-exclude = ["semgrep/tests"]
+
+[tool.ruff.lint]
+# The typed exception emitter preserves tracebacks; BLE001 is kept at its callers.
+logger-objects = ["app.shared.logging"]
+select = [
+    "E", "F", "W", "I", "N", "UP", "YTT", "ASYNC", "S", "BLE", "FBT", "B", "A",
+    "COM", "C4", "DTZ", "T10", "EM", "EXE", "FA", "ISC", "ICN", "G", "INP", "PIE",
+    "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SLOT", "SIM", "TID", "INT",
+    "ARG", "PTH", "TD", "FIX", "ERA", "PGH", "PL", "TRY", "FLY", "PERF", "FURB",
+    "LOG", "RUF", "ANN",
+]
+ignore = [
+    # Formatter conflicts: ruff itself recommends disabling these when using `ruff format`.
+    "E501", "COM812",
+    # House style: messages live at the raise site, not in a constant.
+    "TRY003", "EM101", "EM102",
+    # Boolean-trap rules. A project-wide call: keyword-only booleans are already the convention here.
+    "FBT001", "FBT002", "FBT003",
+    # Complexity is xenon's gate (worst block C, module average B, app average A; .pre-commit-config.yaml).
+    # PLR0917 stays on.
+    "PLR0913", "PLR0912", "PLR0915", "PLR0911",
+    # Magic-value comparisons (HTTP status codes, small counts) across many unrelated files.
+    "PLR2004",
+]
+
+[tool.ruff.lint.pylint]
+# PLR0917: a function takes at most one positional subject besides self/cls; everything after it is keyword-only.
+# Signatures a library or a positional callback type fixes carry `# noqa: PLR0917` with the reason.
+max-positional-args = 1
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+force-sort-within-sections = true
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+# Alembic env and revisions are loaded by path, not an importable package.
+"migrations/*" = ["INP001"]
+"migrations/**" = ["PLR0917"]
+# Developer scripts run by path, not an importable package.
+"tools/*" = ["INP001"]
+# typer commands take their arguments positionally by design.
+"app/cli.py" = ["PLR0917"]
+"app/cli_operator_keys.py" = ["PLR0917"]
+"app/cli_treasury.py" = ["PLR0917"]
+# Vulture's allow-list names the reported names as bare expressions, which is all it is
+# (https://github.com/jendrikseipp/vulture#whitelists).
+"vulture_whitelist.py" = ["B018", "F821"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ty.environment]
+python-version = "3.15"
+
+# ty has no strict preset; the strict bar is assembled here. The no-`Any` half lives in ruff's ANN rules.
+[tool.ty.analysis]
+respect-type-ignore-comments = false
+
+[tool.ty.rules]
+possibly-unresolved-reference = "error"
+possibly-missing-attribute = "error"
+possibly-missing-import = "error"
+unused-ignore-comment = "warn"
+
+[tool.deptry]
+# semgrep/ holds fixtures importing banned packages on purpose (ruff excludes it too).
+exclude = [".venv", "migrations", "semgrep"]
+
+[tool.deptry.per_rule_ignores]
+# Used implicitly, not imported: psycopg is SQLAlchemy's driver (the DSN's `+psycopg`), uvicorn is the server the
+# image runs (`uvicorn app.main:app`).
+DEP002 = ["psycopg", "uvicorn"]
+
+[tool.importlinter]
+root_packages = ["app"]
+include_external_packages = true
+# Three tiers, no cycles between top-level packages, and one contract per domain that keeps its persistence private.
+# Every ignore_imports entry is coupling still to remove; the lists only shrink.
+
+[[tool.importlinter.contracts]]
+name = "The app forms three tiers: entry roots, domains, infrastructure"
+type = "layers"
+containers = ["app"]
+layers = [
+    # Entry roots: the process entry modules, the API's middleware and app/lifespan, which opens each process's
+    # resources and wires every domain.
+    "main | watcher | cli | watcher_healthcheck",
+    # The CLI's command groups (2026-10-13); treasury prints the operator key report.
+    "cli_treasury",
+    "cli_operator_keys",
+    "rate_limit_middleware | request_log_middleware",
+    "lifespan",
+    "log_events",
+    # Domains, each importing only the domains below it (PLAN.md section 11).
+    "payments.chain_watcher | payments.pages",
+    # Account webhooks: sends account events to the account's own server (2026-10-12). Below the watcher, whose operator
+    # alert recorder reads the operator's Discord alert repeat through it.
+    "payments.account_webhooks",
+    # Quantity links: each payer's slot is an invoice made through the invoices service. Static deposit addresses
+    # (PLAN.md section 17): an account's permanent deposit per customer, checked and predicted through invoices.
+    # Invoice schedules (PLAN.md section 18): the watcher makes each period's invoice through the invoices service.
+    "payments.payment_links | payments.static_deposit_addresses | payments.invoice_schedules",
+    "payments.invoices",
+    "payments.account_events",
+    # Accounts: open sign-up, passkeys, their sessions, and the session check every account route runs; an account's
+    # accepted coins list XMR only on a chain where it has a Monero wallet, so it reads that through monero_wallets.
+    "payments.accounts",
+    # Monero wallets (PLAN.md section 14): invoices allocate subaddress minors through its service; it reaches accounts
+    # only by foreign key.
+    "payments.monero_wallets",
+    "payments.settlements | payments.price_quotes | payments.sign_up_screening",
+    "payments.chains",
+    # Infrastructure: the factory and Chainlink over the EVM JSON-RPC client, ip-api, the rate limiter, the Monero
+    # sidecar's HTTP API, Redis, Postgres.
+    "infrastructure.deposit_factory_api | infrastructure.chainlink_api | infrastructure.safe_api",
+    "infrastructure.evm_rpc_api | infrastructure.ip_api | infrastructure.rate_limit | infrastructure.monero_sidecar_api",
+    "infrastructure.redis | infrastructure.postgres",
+    # Domain-free building blocks; logging lives in shared, so shared is the bottom tier.
+    "shared | config",
+]
+ignore_imports = [
+    # The request dependencies are the handle app/lifespan passes down to each domain's dependencies.py and to the
+    # rate limit middleware; holding it is not a dependency on the wiring.
+    "app.** -> app.lifespan.dependencies",
+    "app.lifespan.dependencies -> app.lifespan.resources",
+]
+
+[[tool.importlinter.contracts]]
+name = "Routes and process entry modules never import a model, repository or store (go through a service)"
+type = "forbidden"
+source_modules = [
+    "app.**.router", "app.**.dependencies", "app.main", "app.watcher", "app.cli", "app.cli_operator_keys",
+    "app.cli_treasury", "app.watcher_healthcheck",
+]
+forbidden_modules = ["app.**.models", "app.**.repository", "app.**.store"]
+allow_indirect_imports = "true"
+
+[[tool.importlinter.contracts]]
+name = "Models never import transport frameworks"
+type = "forbidden"
+source_modules = ["app.**.models"]
+forbidden_modules = ["fastapi", "starlette"]
+
+[[tool.importlinter.contracts]]
+name = "The watcher never imports FastAPI or request dependencies"
+type = "forbidden"
+source_modules = [
+    "app.watcher",
+    "app.watcher_healthcheck",
+    "app.lifespan.watcher_lifespan",
+    "app.lifespan.composition",
+    "app.payments.chain_watcher",
+    "app.payments.settlements",
+]
+forbidden_modules = ["fastapi", "app.**.dependencies"]
+
+[[tool.importlinter.contracts]]
+name = "Only app.payments.invoices imports its models and repository"
+type = "protected"
+protected_modules = ["app.payments.invoices.models", "app.payments.invoices.repository"]
+allowed_importers = ["app.payments.invoices"]
+
+[[tool.importlinter.contracts]]
+name = "Only app.payments.payment_links imports its models and repository"
+type = "protected"
+protected_modules = ["app.payments.payment_links.models", "app.payments.payment_links.repository"]
+allowed_importers = ["app.payments.payment_links"]
+
+[[tool.importlinter.contracts]]
+name = "Only app.payments.invoice_schedules imports its models and repository"
+type = "protected"
+protected_modules = ["app.payments.invoice_schedules.models", "app.payments.invoice_schedules.repository"]
+allowed_importers = ["app.payments.invoice_schedules"]
+
+[[tool.importlinter.contracts]]
+name = "Only app.payments.price_quotes imports its models, repository and store"
+type = "protected"
+protected_modules = [
+    "app.payments.price_quotes.models",
+    "app.payments.price_quotes.repository",
+    "app.payments.price_quotes.store",
+]
+allowed_importers = ["app.payments.price_quotes"]
+
+[[tool.importlinter.contracts]]
+name = "Only app.payments.settlements imports its models and repository"
+type = "protected"
+protected_modules = ["app.payments.settlements.models", "app.payments.settlements.repository"]
+allowed_importers = ["app.payments.settlements"]
+
+[[tool.importlinter.contracts]]
+name = "Only app.payments.account_events imports its models and repository"
+type = "protected"
+protected_modules = ["app.payments.account_events.models", "app.payments.account_events.repository"]
+allowed_importers = ["app.payments.account_events"]
+
+[[tool.importlinter.contracts]]
+name = "Only app.payments.accounts imports its models and repository"
+type = "protected"
+protected_modules = ["app.payments.accounts.models", "app.payments.accounts.repository"]
+allowed_importers = ["app.payments.accounts"]
+
+[[tool.importlinter.contracts]]
+name = "Only app.payments.monero_wallets imports its models and repository"
+type = "protected"
+protected_modules = ["app.payments.monero_wallets.models", "app.payments.monero_wallets.repository"]
+allowed_importers = ["app.payments.monero_wallets"]
+
+[[tool.importlinter.contracts]]
+name = "Only app.payments.sign_up_screening imports its store"
+type = "protected"
+protected_modules = ["app.payments.sign_up_screening.store"]
+allowed_importers = ["app.payments.sign_up_screening"]
+
+[[tool.importlinter.contracts]]
+name = "Only app.payments.account_webhooks imports its models and repository"
+type = "protected"
+protected_modules = ["app.payments.account_webhooks.models", "app.payments.account_webhooks.repository"]
+allowed_importers = ["app.payments.account_webhooks"]
+
+[[tool.importlinter.contracts]]
+name = "Only app.payments.static_deposit_addresses imports its models and repository"
+type = "protected"
+protected_modules = ["app.payments.static_deposit_addresses.models", "app.payments.static_deposit_addresses.repository"]
+allowed_importers = ["app.payments.static_deposit_addresses"]
+
+[[tool.importlinter.contracts]]
+name = "Only app.payments.chain_watcher imports its models and repository"
+type = "protected"
+protected_modules = ["app.payments.chain_watcher.models", "app.payments.chain_watcher.repository"]
+allowed_importers = ["app.payments.chain_watcher"]
