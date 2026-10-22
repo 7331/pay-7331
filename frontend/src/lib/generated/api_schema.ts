@@ -1576,6 +1576,7 @@ export interface components {
             };
         };
         InvoiceAccountResponse: {
+            /** @description The accepted shortfall in percent. On an invoice whose payer still picks among several networks it is provisional (the first network's) and becomes the picked network's on the pick. */
             accuracy_percent: string;
             amount_due: string | null;
             amount_received: string | null;
@@ -1590,6 +1591,7 @@ export interface components {
             created_at: string;
             deposit_address: string | null;
             destination_address: string;
+            /** @description When the payment window closes. On an invoice whose payer still picks among several networks it is provisional (the longest window offered) and restarts with the picked network's window on the pick. */
             expires_at: string | null;
             fiat: components["schemas"]["InvoiceFiat"];
             id: string;
@@ -1671,6 +1673,7 @@ export interface components {
             /** Format: date-time */
             created_at: string;
             deposit_address: string | null;
+            /** @description When the payment window closes. On an invoice whose payer still picks among several networks it is provisional (the longest window offered) and restarts with the picked network's window on the pick. */
             expires_at: string | null;
             fiat: components["schemas"]["InvoiceFiat"];
             id: string;

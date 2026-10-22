@@ -151,7 +151,7 @@ export function InvoiceOptionsSheet({
             spacing={0}
             value={lifetimePresets.some((lifetimePreset) => lifetimePreset.minutes === options.lifetimeMinutesText) ? options.lifetimeMinutesText : ""}
             // Tapping the picked preset again goes back to the chain default.
-            onValueChange={(presetMinutes) => changeCheckedOption("lifetimeMinutes", { lifetimeMinutesText: presetMinutes })}
+            onValueChange={(presetMinutes) => changeCheckedOption("lifetimeMinutes", { lifetimeMinutesText: presetMinutes, lifetimeMinutesTextIsUnreadable: false })}
             className="grid w-full grid-cols-5"
             aria-label="Time to pay presets"
           >
@@ -175,11 +175,13 @@ export function InvoiceOptionsSheet({
               max={720}
               step={1}
               aria-label="Time to pay in minutes"
-              placeholder={options.repeatInterval ? "Chain default, else 12 h" : "Chain default"}
+              placeholder={options.repeatInterval ? "12 h" : "Network default"}
               aria-invalid={Boolean(fieldErrors.lifetimeMinutes) || undefined}
               aria-describedby={fieldErrors.lifetimeMinutes ? "lifetime_minutes_error" : undefined}
               value={options.lifetimeMinutesText}
-              onChange={(changeEvent) => changeCheckedOption("lifetimeMinutes", { lifetimeMinutesText: changeEvent.target.value })}
+              onChange={(changeEvent) => changeCheckedOption("lifetimeMinutes", { lifetimeMinutesText: changeEvent.target.value, lifetimeMinutesTextIsUnreadable: changeEvent.target.validity.badInput })}
+              // React skips onChange while the value stays "", as it does when the browser cannot read what is typed.
+              onInput={(inputEvent) => onOptionsChange({ lifetimeMinutesTextIsUnreadable: inputEvent.currentTarget.validity.badInput })}
               className="px-3.5 text-base"
             />
             <InputGroupAddon align="inline-end">
@@ -216,12 +218,10 @@ export function InvoiceOptionsSheet({
           <FieldLabel htmlFor="accuracy_percent_input">Accepted shortfall, %</FieldLabel>
           <Input
             id="accuracy_percent_input"
-            type="number"
+            type="text"
             inputMode="decimal"
-            min={0}
-            max={5}
-            step={0.1}
-            placeholder="Chain default"
+            autoComplete="off"
+            placeholder="Network default"
             aria-invalid={Boolean(fieldErrors.accuracyPercent) || undefined}
             aria-describedby={fieldErrors.accuracyPercent ? "accuracy_percent_error" : "accuracy_percent_description"}
             value={options.accuracyPercentText}

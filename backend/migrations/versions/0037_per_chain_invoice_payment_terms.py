@@ -34,6 +34,9 @@ def upgrade() -> None:
     # write behind a long transaction holding one of them. A constant default makes ADD COLUMN a catalog change, with
     # no table rewrite (PostgreSQL 11 and later, same page), and DROP NOT NULL checks no rows.
     op.execute("SET LOCAL lock_timeout = '5s'")
+    # Every lock up front, in the order the app takes them (a link's slot, then its account, then the invoice), so the
+    # steps below never wait on each other's tables half-way through.
+    op.execute("LOCK TABLE payment_links, invoice_schedules, accounts, invoices IN ACCESS EXCLUSIVE MODE")
     for column_name in ("invoice_lifetime_seconds_by_chain", "accuracy_percent_by_chain"):
         op.add_column(
             "accounts",

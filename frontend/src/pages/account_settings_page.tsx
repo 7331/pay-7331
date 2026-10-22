@@ -1,11 +1,11 @@
 // `/settings`, the signed-in account's settings (PLAN.md sections 7 and 10) as rows that each show a short value and
 // open their own sheet (2026-10-14), in groups by what the account is doing: "Getting paid" (the payout address,
-// changed only behind a fresh passkey check, and "Coins", one section per network with its coins, its invoice defaults
-// and, on a Monero network, its wallet and confirmations: account_chain_settings_sheet.tsx), "Payer page" (the support
-// contact), "Security" (the passkeys, account_passkey_settings.tsx), "Connect" (the Discord channel webhook, the
-// webhook for the account's own server and its API tokens, which sit with the webhook they serve) and "Records" (the CSV
-// export). Each sheet saves its own fields (`PATCH /api/v1/accounts/current`; making a link saves its coins too) or acts
-// at once.
+// changed only behind a fresh passkey check, and "Coins and networks", one section per network with its coins, its
+// invoice defaults and, on a Monero network, its wallet and confirmations: account_chain_settings_sheet.tsx), "Payer
+// page" (the support contact), "Security" (the passkeys, account_passkey_settings.tsx), "Connect" (the Discord channel
+// webhook, the webhook for the account's own server and its API tokens, which sit with the webhook they serve) and
+// "Records" (the CSV export). Each sheet saves its own fields (`PATCH /api/v1/accounts/current`; making a link saves
+// its coins too) or acts at once.
 import { Fingerprint } from "lucide-react"
 import { useState, type FormEvent } from "react"
 import { toast } from "sonner"
@@ -111,7 +111,7 @@ function SignedInAccountSettings({ accountSession }: { accountSession: AccountSe
             valueIsMonospace
             onOpen={() => setOpenedSheet("payout_address")}
           />
-          <AccountSettingsRow id="settings_accepted_coins_row" title="Coins" valueText={acceptedCoinsText} onOpen={() => setOpenedSheet("accepted_coins")} />
+          <AccountSettingsRow id="settings_accepted_coins_row" title="Coins and networks" valueText={acceptedCoinsText} onOpen={() => setOpenedSheet("accepted_coins")} />
         </ItemGroup>
         <SettingsGroupHeading>Payer page</SettingsGroupHeading>
         <ItemGroup id="settings_payer_page_rows" className="gap-0 rounded-2xl border">

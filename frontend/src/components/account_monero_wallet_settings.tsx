@@ -1,10 +1,10 @@
 // One Monero chain's "Wallet" row and its sheet (PLAN.md section 14, 2026-10-14), inside that chain's section of
-// `/settings`' Coins sheet (account_chain_settings_sheet.tsx), which shows it only for an enabled Monero chain: the
-// receiver's own wallet, which XMR links pay at a fresh subaddress each. Setting or changing it asks for a fresh passkey
-// check bound to that wallet, like the payout address. The private view key lives only in the form's state while it is
-// open (a masked text field that no password manager offers to save) and goes to the API once; the API never sends it
-// back. The sheet also says to use a dedicated wallet, that payments land in account 1, and how to widen the wallet's
-// lookahead, with "I set it". It opens on top of the Coins sheet (a nested Drawer on a phone).
+// `/settings`' "Coins and networks" sheet (account_chain_settings_sheet.tsx), which shows it only for an enabled Monero
+// chain: the receiver's own wallet, which XMR links pay at a fresh subaddress each. Setting or changing it asks for a
+// fresh passkey check bound to that wallet, like the payout address. The private view key lives only in the form's
+// state while it is open (a masked text field that no password manager offers to save) and goes to the API once; the
+// API never sends it back. The sheet also says to use a dedicated wallet, that payments land in account 1, and how to
+// widen the wallet's lookahead, with "I set it". It opens on top of that sheet (a nested Drawer on a phone).
 import { ArrowLeft, Fingerprint } from "lucide-react"
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { toast } from "sonner"
@@ -231,8 +231,8 @@ function MoneroWalletForm({
 
   async function confirmWithPasskey(submitEvent: FormEvent) {
     submitEvent.preventDefault()
-    // The sheet opens from inside the Coins sheet's form: React carries a submit up through the portal, and the wallet
-    // change must never also save that form.
+    // The sheet opens from inside the "Coins and networks" sheet's form: React carries a submit up through the portal,
+    // and the wallet change must never also save that form.
     submitEvent.stopPropagation()
     setSaveError("")
     const trimmedAddress = typedAddress.trim()

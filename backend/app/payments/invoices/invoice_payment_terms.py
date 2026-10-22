@@ -2,7 +2,8 @@
 made and never again, so a later settings change moves no invoice (as the payout address).
 
 Per chain: the maker's value when the request named one (it applies to every chain), else the account's saved default
-for that chain, else the server's (``NewInvoice.default_lifetime_seconds``, ``DEFAULT_ACCURACY_PERCENT``). A
+for that chain, else the server's (``DEFAULT_INVOICE_LIFETIME_SECONDS``, ``DEFAULT_ACCURACY_PERCENT``). An invoice
+schedule always names its window (its own, else 12 hours), so only its shortfall can come from the account. A
 signed-out invoice has no account and takes the server's. One chain: its terms are the invoice's. Several chains: the
 invoice waits for the payer's pick with the longest window among them (so no chain's window is cut short) and the
 first chain's shortfall, which nothing reads before a pick (there is no deposit yet); each chain's terms are kept in
@@ -13,7 +14,7 @@ from decimal import Decimal
 
 from pydantic import JsonValue
 
-from app.payments.chains.invoice_payment_terms import DEFAULT_ACCURACY_PERCENT
+from app.payments.chains.invoice_payment_terms import DEFAULT_ACCURACY_PERCENT, DEFAULT_INVOICE_LIFETIME_SECONDS
 from app.payments.invoices.models import Invoice
 from app.payments.invoices.types import InvoicePaymentTerms, NewInvoice
 
@@ -30,7 +31,7 @@ def resolve_payment_terms_by_chain(
         chain_key: InvoicePaymentTerms(
             lifetime_seconds=new_invoice.lifetime_seconds
             or saved_lifetime_seconds_by_chain.get(chain_key)
-            or new_invoice.default_lifetime_seconds,
+            or DEFAULT_INVOICE_LIFETIME_SECONDS,
             accuracy_percent=(
                 new_invoice.accuracy_percent
                 if new_invoice.accuracy_percent is not None

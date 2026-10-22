@@ -31,8 +31,8 @@ export function ResponsiveSheet({
   // The id and test id on the sheet's content, for the e2e.
   sheetId?: string
   testId?: string
-  // Opened from inside another sheet (a Monero chain's wallet from the Coins sheet): on a phone a nested Drawer, which
-  // must be rendered within its parent Drawer; a Dialog stacks over the other by itself.
+  // Opened from inside another sheet (a Monero chain's wallet from the "Coins and networks" sheet): on a phone a nested
+  // Drawer, which must be rendered within its parent Drawer; a Dialog stacks over the other by itself.
   isNested?: boolean
   children: ReactNode
 }) {

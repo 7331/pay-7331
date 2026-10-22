@@ -202,12 +202,14 @@ amounts are `numeric(20,2)`. Only configured assets are accepted (no fee-on-tran
   `expires_at` (lifetime, default 30 min, 5 min to 12 h, as Cryptomus). A crypto-denominated invoice has no quote.
 - Payment window and accepted shortfall per chain (2026-10-22): `lifetime_seconds` and `accuracy_percent` on
   `POST /invoices`, a quantity link or a schedule are optional. A value sent applies to every chain of that invoice,
-  link or schedule. Left out, each chain takes the account's saved default for it (`/settings`' Coins sheet,
-  `invoice_lifetime_seconds_by_chain` and `accuracy_percent_by_chain`), else the server's (30 minutes, 1%; a
-  schedule's invoice 12 hours, 1%); a signed-out invoice takes the server's. They are resolved once, when the chain is
+  link or schedule. Left out, each chain takes the account's saved default for it (`/settings`' "Coins and networks"
+  sheet, `invoice_lifetime_seconds_by_chain` and `accuracy_percent_by_chain`), else the server's (30 minutes, 1%); a
+  signed-out invoice takes the server's. A schedule keeps its own window (its `lifetime_seconds`, else 12 hours) and
+  never takes the account's per-chain one, which is sized for a checkout; its shortfall left out still takes the
+  account's per-chain one. They are resolved once, when the chain is
   known: a one-chain invoice gets its chain's at creation; an invoice offering several chains snapshots every offered
   chain's in `invoices.payment_terms_by_chain` at creation, waits for the pick with the longest of their windows (and
-  the first chain's shortfall, which nothing reads before a pick), and on the pick takes the chosen chain's window
+  the first chain's shortfall, which nothing reads before a pick; the API and docs call both provisional until the pick), and on the pick takes the chosen chain's window
   (restarted from the pick, as before) and shortfall. A link or schedule made without them stores null and resolves
   per chain each time it makes an invoice. Settings changed later never move an existing invoice, as the payout
   address. The accounting reads the invoice's own `accuracy_percent`, the resolved one.
@@ -1253,15 +1255,15 @@ header; the cookie rides along.
   "+ Add a note" once the address is valid, which shows the note field focused, and signed in "Options" on the same
   line, naming the changed ones ("Options: EUR, 15 min"): a sheet with the currency (money or a coin; the big amount
   then reads "€" or the coin's symbol, and a coin amount is paid in that coin only), the chain when more than one is
-  enabled, "How many payers", time to pay (presets and minutes) and accepted shortfall % (both empty, "Chain default", by
+  enabled, "How many payers", time to pay (presets and minutes) and accepted shortfall % (both empty, "Network default", by
   default: nothing is sent and each network takes the account's setting, 2026-10-22), the back-to-shop link, top-ups
   open until, order id, metadata JSON and the contract-wallet tick; a hint only where the value doesn't explain itself;
   a wrong one shows under its field and "Create link" opens the sheet at it. `/new`, the old account form, redirects to
   `/?options=1`, which opens that sheet signed in. "Create link" (pinned at the bottom) posts `POST /public/invoices`
   signed out (with `assets` when the ticks differ from every coin), `POST /invoices` signed in, or with more than one
   payer `POST /payment-links` ("Create link for N"; USD or EUR, no order id, metadata or top-up deadline), or with
-  Options' "Repeat" (Never, Daily, Weekly, Monthly; one payer, no top-up deadline, the order id a prefix; an empty time to pay is the
-  chain's default, else 12 h) `POST /invoice-schedules` ("Create monthly invoice") and then `/activity#schedules`
+  Options' "Repeat" (Never, Daily, Weekly, Monthly; one payer, no top-up deadline, the order id a prefix; an empty time to pay is 12 h,
+  never the network's checkout window) `POST /invoice-schedules` ("Create monthly invoice") and then `/activity#schedules`
   (2026-10-21, section 18); otherwise it goes to
   the invoice's (or the link's `/l/{id}`) own page, so the address bar is the link, under a share overlay (a Drawer on a phone, a Dialog on a wide screen):
   the link's QR and the link on one line, tap to copy, "Share link" through the Web Share API or a copy, "Make
@@ -1342,7 +1344,7 @@ header; the cookie rides along.
   its own sheet (a Drawer on a phone, a Dialog on a wide screen; 2026-10-14), no section blurbs, grouped under short
   muted headings by what the account is doing (2026-10-22). "Getting paid": "Payout" (the short address; the sheet
   shows it whole, tap to copy, then the new address and "Confirm with passkey", saying that links already made keep the
-  old one) and "Coins" (the first three coins and "+N"; the sheet has one section per network that takes invoices: its
+  old one) and "Coins and networks" (the first three coins and "+N"; the sheet has one section per network that takes invoices: its
   coin picker, then its invoice defaults, "Time to pay, min" and "Shortfall, %", each empty for the default `GET
   /chains` names; an EVM network says in one muted line that a payment counts once its block is finalized, with no
   count to set (section 4); a Monero network shows its "Wallet" row (the short address or "Off", opening the wallet
@@ -1974,9 +1976,9 @@ authorisations, nothing that moves money the payer did not send; the gateway sta
 - Each invoice is made through the normal creation (channel `schedule`: no IP, capped per account like an API token's,
   `PAY_MAXIMUM_OPEN_INVOICES_PER_ACCOUNT`), so it sends the usual events, and records `schedule.invoice_created` with
   the invoice as its data in the same transaction; the webhook, the invoice's `callback_url`, a token's `GET /events`
-  and Discord get it (it has an `invoice_id`, section 8.3). Without `lifetime_seconds` each invoice takes the account's
-  window for its chain, else 12 h, the longest (section 4): the link reaches the payer later, through the account's
-  server.
+  and Discord get it (it has an `invoice_id`, section 8.3). Without `lifetime_seconds` each invoice waits 12 h, the longest
+  (section 4), never the account's per-chain window: the link reaches the payer later, through the account's server.
+  The account's per-chain shortfall does apply when the schedule sets none.
 - A refusal (prices down, a factory missing) rolls the period's work back, notes `last_failure_code` and
   `last_failure_at` on the schedule and retries after 60 s, 2, 5, 15, 30 then every 60 minutes. No account event:
   the schedule's view shows it.

@@ -65,8 +65,9 @@ neither.
 
 10. Settings on a 375 px phone (in Chromium: WebKit sends no Secure cookie to http://localhost): the groups read Getting
    paid, Payer page, Security, Connect, Records, and every row's sheet lies within the screen (no element past an edge,
-   no sideways scroll, the export sheet with both dates filled); the Coins sheet refuses a 3-minute window under its
-   field, says the network counts a payment at its finalized block (no count to set), and saves 45 minutes and 2.5%;
+   no sideways scroll, the export sheet with both dates filled); the Coins and networks sheet refuses a 3-minute window
+   under its field, says the network counts a payment at its finalized block (no count to set), and saves 45 minutes
+   and 2.5% (typed "2,5");
    an invoice made on / with Options left empty, an API invoice and a quantity link's payer invoice without terms take
    them, an API invoice naming 10 minutes and 0.5% keeps its own; an unknown network is refused; the defaults are
    cleared at the end. Every sheet the other scenarios open (options and coins on /, the share overlay, "I've paid",
@@ -2002,7 +2003,8 @@ def save_chain_defaults_in_coins_sheet(run: BrowserScenarioRun, page: Page) -> N
     expect(page.locator(f"#settings_lifetime_minutes_error_{FORK_CHAIN_KEY}")).to_be_visible()
     expect(page.locator("#settings_save_accepted_coins_button")).to_be_disabled()
     lifetime_input.fill(str(CHAIN_LIFETIME_MINUTES))
-    page.locator(f"#settings_accuracy_percent_input_{FORK_CHAIN_KEY}").fill(CHAIN_ACCURACY_PERCENT)
+    # Typed with a decimal comma, as a comma locale writes it: read as 2.5, never as an empty field's default.
+    page.locator(f"#settings_accuracy_percent_input_{FORK_CHAIN_KEY}").fill(CHAIN_ACCURACY_PERCENT.replace(".", ","))
     check_open_sheets_fit_the_screen(page, what="the filled Coins sheet")
     run.take_screenshot(page, "coins_sheet_filled")
     page.click("#settings_save_accepted_coins_button")
@@ -2021,11 +2023,11 @@ def save_chain_defaults_in_coins_sheet(run: BrowserScenarioRun, page: Page) -> N
 
 
 def create_invoice_on_narrow_front_page(page: Page) -> str:
-    """/ at 375 px with Options left empty ("Chain default"), its sheets within the screen; returns the invoice id."""
+    """/ at 375 px with Options left empty ("Network default"), its sheets within the screen; returns the invoice id."""
     page.goto(f"{PUBLIC_BASE_URL}/")
     expect(page.locator("#create_button")).to_be_enabled(timeout=30_000)
     page.click("#invoice_options_button")
-    expect(page.locator("#lifetime_minutes_input")).to_have_attribute("placeholder", "Chain default")
+    expect(page.locator("#lifetime_minutes_input")).to_have_attribute("placeholder", "Network default")
     check_open_sheets_fit_the_screen(page, what="the options sheet on /")
     page.click("#invoice_options_done_button")
     expect(page.get_by_role("dialog")).to_have_count(0)

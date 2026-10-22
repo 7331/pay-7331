@@ -295,7 +295,10 @@ class InvoicePublicResponse(ApiResponse):
     return_url: str | None
     # The link after paying; the page falls back to ``return_url`` when null.
     success_url: str | None
-    expires_at: datetime | None
+    expires_at: datetime | None = Field(
+        description="When the payment window closes. On an invoice whose payer still picks among several networks it"
+        " is provisional (the longest window offered) and restarts with the picked network's window on the pick."
+    )
     underpaid_open_until: datetime | None
     payment_uri: str | None
     payments: list[InvoicePublicPayment]
@@ -320,7 +323,10 @@ class InvoiceAccountResponse(InvoicePublicResponse):
     destination_address: str
     order_id: str | None
     metadata: dict[str, JsonValue] | None
-    accuracy_percent: str
+    accuracy_percent: str = Field(
+        description="The accepted shortfall in percent. On an invoice whose payer still picks among several networks"
+        " it is provisional (the first network's) and becomes the picked network's on the pick."
+    )
     # The quantity link a payer made it from; null for every other invoice.
     payment_link_id: str | None
     # The invoice schedule that made it and the start of the period it bills; null for every other invoice.

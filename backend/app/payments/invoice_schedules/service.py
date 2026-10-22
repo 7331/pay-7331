@@ -484,9 +484,11 @@ class InvoiceScheduleService:
                 allow_contract_destination=True,
                 note=invoice_schedule.note,
                 order_id=f"{order_id_prefix_of(invoice_schedule)}-{format_period_day(period_start)}",
-                lifetime_seconds=invoice_schedule.lifetime_seconds,
+                # The schedule's own window, never the account's per-chain one: its payer gets the link later, by
+                # email or the account's server, so a checkout-length window would lapse first. The shortfall left
+                # out takes the account's per-chain default.
+                lifetime_seconds=invoice_schedule.lifetime_seconds or DEFAULT_SCHEDULED_INVOICE_LIFETIME_SECONDS,
                 accuracy_percent=invoice_schedule.accuracy_percent,
-                default_lifetime_seconds=DEFAULT_SCHEDULED_INVOICE_LIFETIME_SECONDS,
                 return_url=invoice_schedule.return_url,
                 success_url=invoice_schedule.success_url,
                 callback_url=invoice_schedule.callback_url,
