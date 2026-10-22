@@ -26,6 +26,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.infrastructure.postgres.base import Base, BaseUnits
+from app.shared.identifiers import generate_public_id
 
 ADDRESS_LENGTH = 42
 HASH_LENGTH = 66
@@ -85,6 +86,9 @@ class StaticDepositAddress(Base):
     last_received_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+STATIC_DEPOSIT_PAYMENT_PUBLIC_ID_PREFIX = "sdp_"
+
+
 class StaticDepositPayment(Base):
     """One rise in what an address received in one coin, or one Transfer log of it. ``transaction_hash`` and
     ``sender`` are None for money no Transfer log explained (a native payment, a contract's internal transfer, a log
@@ -101,9 +105,16 @@ class StaticDepositPayment(Base):
         ),
         CheckConstraint("credited = (uncredited_reason IS NULL)", name="ck_static_deposit_payments_credited_or_reason"),
         Index("ix_static_deposit_payments_static_deposit_address_id_id", "static_deposit_address_id", "id"),
+        Index("ux_static_deposit_payments_public_id", "public_id", unique=True),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    # The payment's id on the wire (`sdp_...`, migration 0038); the integer key stays internal.
+    public_id: Mapped[str] = mapped_column(
+        String(26),
+        default=lambda: generate_public_id(STATIC_DEPOSIT_PAYMENT_PUBLIC_ID_PREFIX),
+        server_default=text(f"generate_public_id('{STATIC_DEPOSIT_PAYMENT_PUBLIC_ID_PREFIX}')"),
+    )
     static_deposit_address_id: Mapped[str] = mapped_column(ForeignKey("static_deposit_addresses.id"))
     asset_symbol: Mapped[str] = mapped_column(String(16))
     amount_base_units: Mapped[int] = mapped_column(BaseUnits)

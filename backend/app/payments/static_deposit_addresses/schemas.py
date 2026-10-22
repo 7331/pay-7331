@@ -26,7 +26,8 @@ class CreateStaticDepositAddressRequest(ApiRequest):
 
 
 class StaticDepositAddressPayment(ApiResponse):
-    id: int
+    # `sdp_` and 22 random characters.
+    id: str
     asset_symbol: str
     amount: str
     # Null when uncredited money found no price; a credited payment always has one.

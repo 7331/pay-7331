@@ -82,7 +82,7 @@ class StaticDepositAddressService:
     def present_payment(self, payment: StaticDepositPayment, *, chain_key: str) -> StaticDepositAddressPayment:
         asset = self.chains_service.get_asset(chain_key, symbol=payment.asset_symbol)
         return StaticDepositAddressPayment(
-            id=payment.id,
+            id=payment.public_id,
             asset_symbol=payment.asset_symbol,
             amount=format_base_units(payment.amount_base_units, decimals=asset.decimals),
             amount_usd=payment.amount_usd,
