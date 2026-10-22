@@ -63,6 +63,16 @@ neither.
 9. Watcher silence: with the watcher stopped, the API records one "Needs the operator" alert (`watcher_not_ticking`)
    on the operator's account about two minutes later, then the watcher starts again.
 
+10. Settings on a 375 px phone (in Chromium: WebKit sends no Secure cookie to http://localhost): the groups read Getting
+   paid, Payer page, Security, Connect, Records, and every row's sheet lies within the screen (no element past an edge,
+   no sideways scroll, the export sheet with both dates filled); the Coins and networks sheet refuses a 3-minute window
+   under its field, says the network counts a payment at its finalized block (no count to set), and saves 45 minutes
+   and 2.5% (typed "2,5");
+   an invoice made on / with Options left empty, an API invoice and a quantity link's payer invoice without terms take
+   them, an API invoice naming 10 minutes and 0.5% keeps its own; an unknown network is refused; the defaults are
+   cleared at the end. Every sheet the other scenarios open (options and coins on /, the share overlay, "I've paid",
+   the link and invoice Drawers on /activity) is checked the same way at its page's width.
+
 Screenshots of each key moment, the log and the results go to the scratch folder. Nothing is sent to a real network.
 """
 
@@ -336,6 +346,48 @@ def page_scrolls_sideways(page: Page) -> bool:
     )
 
 
+# Every element of every open dialog (a Drawer and a Dialog are both role="dialog") must lie within the viewport, and
+# no scroll area in one may be wider than its view: a sheet's own scroller clips sideways overflow (as on iOS, where a
+# date field once pushed the export sheet off the screen), so the document's width alone would not show it. Text cut
+# with an ellipsis and form fields scrolling their own value are their own business. Finite animations are awaited
+# first, so a Dialog zooming in is measured at its end.
+OPEN_SHEET_OVERFLOW_SCRIPT = """async () => {
+    await Promise.all(document.getAnimations()
+        .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+        .map((animation) => animation.finished.catch(() => null)));
+    const viewportWidth = document.documentElement.clientWidth;
+    const problems = [];
+    if (document.documentElement.scrollWidth > viewportWidth) {
+        problems.push(`document ${document.documentElement.scrollWidth} px wide in ${viewportWidth}`);
+    }
+    const describe = (element) => element.id ? `#${element.id}`
+        : element.dataset.testid ? `[data-testid=${element.dataset.testid}]`
+        : `${element.tagName.toLowerCase()}.${String(element.className).split(" ").slice(0, 3).join(".")}`;
+    for (const sheet of document.querySelectorAll('[role="dialog"], [role="alertdialog"]')) {
+        for (const element of [sheet, ...sheet.querySelectorAll("*")]) {
+            const style = getComputedStyle(element);
+            if (style.display === "none" || style.visibility === "hidden" || element.closest(".sr-only")) continue;
+            const box = element.getBoundingClientRect();
+            if (box.width === 0) continue;
+            if (box.right > viewportWidth + 1 || box.left < -1) {
+                problems.push(`${describe(element)} spans ${Math.round(box.left)} to ${Math.round(box.right)} px`);
+            }
+            const scrollsItsOwnText = style.textOverflow === "ellipsis" || ["INPUT", "TEXTAREA"].includes(element.tagName);
+            if (!scrollsItsOwnText && style.overflowX !== "visible" && element.scrollWidth > element.clientWidth + 1) {
+                problems.push(`${describe(element)} holds ${element.scrollWidth} px in ${element.clientWidth}`);
+            }
+        }
+    }
+    return problems.slice(0, 12);
+}"""
+
+
+def check_open_sheets_fit_the_screen(page: Page, *, what: str) -> None:
+    """With a sheet open: nothing in it reaches past the screen's edges, and nothing scrolls sideways."""
+    problems = page.evaluate(OPEN_SHEET_OVERFLOW_SCRIPT)
+    check(not problems, f"{what} is wider than the {page.viewport_size} screen: {problems}")
+
+
 def decode_qr_code(qr_locator: Locator, *, screenshot_path: Path) -> str | None:
     """Screenshot the QR element and decode it with OpenCV; None when OpenCV finds no code."""
     import cv2  # noqa: PLC0415 (only this check needs it)
@@ -413,6 +465,7 @@ def read_link_from_share_overlay(
     is the address bar and whose QR reads the link. Returns the link."""
     maker_page.wait_for_url(re.compile(link_path_pattern))
     expect(maker_page.get_by_test_id("creator_share_overlay")).to_be_visible()
+    check_open_sheets_fit_the_screen(maker_page, what=f"the {who}'s share overlay")
     link_url = str(maker_page.locator("#invoice_link_text").text_content()).strip()
     check(link_url == maker_page.url, f"the overlay's link {link_url!r} is not the address bar {maker_page.url!r}")
     run.take_screenshot(maker_page, f"{who}_share_overlay")
@@ -475,6 +528,7 @@ def fill_account_form(run: BrowserScenarioRun, *, account_page: Page, entry: Acc
     run.take_screenshot(account_page, "account_form_field_error")
     account_page.click("#invoice_options_button")
     expect(account_page.locator("#quantity_input")).to_be_visible()
+    check_open_sheets_fit_the_screen(account_page, what="the options sheet")
     # The stack enables only local_fork, so the options show no chain picker.
     check(account_page.locator("#chain_select").count() == 0, "the options show a chain picker with one chain enabled")
     account_page.click("#currency_select")
@@ -491,6 +545,7 @@ def fill_account_form(run: BrowserScenarioRun, *, account_page: Page, entry: Acc
     account_page.click("#accepted_coins_button")
     coin_toggles = account_page.locator('[data-testid^="accepted_coin_toggle_"]')
     expect(coin_toggles.first).to_be_visible()
+    check_open_sheets_fit_the_screen(account_page, what="the coins sheet on /")
     # Tick the wanted coins first, then untick the rest: the picker keeps at least one ticked.
     for wanted in (True, False):
         for coin_toggle in coin_toggles.all():
@@ -1163,6 +1218,7 @@ def scenario_quantity_link_two_payers_then_sold_out(context: FlowContext, *, bro
         run.take_screenshot(activity_page, f"account_links_tab_{color_scheme}")
         activity_page.get_by_test_id("payment_link_row").first.click()
         expect(activity_page.locator("#payment_link_invoice_list > *")).to_have_count(2, timeout=30_000)
+        check_open_sheets_fit_the_screen(activity_page, what="the link Drawer on /activity")
         run.take_screenshot(activity_page, f"account_link_drawer_{color_scheme}")
         activity_page.context.close()
 
@@ -1336,6 +1392,7 @@ def scenario_wrong_coin_shown_and_sent_back(context: FlowContext, *, browser: Br
     expect(invoice_overlay.get_by_test_id("invoice_stray_payment_block")).to_contain_text(
         f"{stray_amount_text} {NATIVE_SYMBOL} from {payer_account.address[:6]}", timeout=30_000
     )
+    check_open_sheets_fit_the_screen(activity_page, what="the invoice Drawer on /activity")
     expect(invoice_overlay.get_by_test_id("stray_refund_handling_line")).to_have_text(
         "Sent back to the wallet it came from."
     )
@@ -1493,6 +1550,7 @@ def unpause_watcher(context: FlowContext) -> None:
 
 def check_transaction_hash_in_sheet(payer_page: Page, *, transaction_hash_text: str, expected: re.Pattern[str]) -> str:
     """Type a hash into the open "I've paid" sheet, check it, and match the one sentence it answers."""
+    check_open_sheets_fit_the_screen(payer_page, what='the "I\'ve paid" sheet')
     payer_page.locator("#transaction_hash_input").fill(transaction_hash_text)
     payer_page.click("#check_transaction_hash_button")
     check_message = payer_page.get_by_test_id("payment_check_message")
@@ -1855,6 +1913,219 @@ def scenario_send_lock_survives_a_reload(context: FlowContext, *, browser: Brows
             "messages": messages, "screenshots": run.screenshot_paths}  # fmt: skip
 
 
+# ---- Settings: per-network defaults and sheet widths (scenario 10) ----
+
+# A 375 px iPhone (SE 3rd gen, 12 mini): the narrowest phone the pages are built for. In Chromium: Playwright's WebKit
+# does not send a Secure cookie to http://localhost, so it cannot be signed in on the stack.
+NARROW_PHONE_VIEWPORT = {"width": 375, "height": 667}
+SETTINGS_GROUP_HEADINGS = ["Getting paid", "Payer page", "Security", "Connect", "Records"]
+SETTINGS_SHEET_ROW_IDS = [
+    "settings_payout_address_row", "settings_accepted_coins_row", "settings_support_contact_row",
+    "settings_passkeys_row", "settings_discord_row", "settings_webhook_row", "settings_api_tokens_row",
+    "settings_invoice_export_row",
+]  # fmt: skip
+CHAIN_LIFETIME_MINUTES = 45
+CHAIN_ACCURACY_PERCENT = "2.5"
+
+
+def open_narrow_phone_page(run: BrowserScenarioRun) -> Page:
+    """A signed-in 375 px phone page: mobile viewport, touch, no motion."""
+    phone_context = run.browser.new_context(
+        viewport=NARROW_PHONE_VIEWPORT,  # ty: ignore[invalid-argument-type]
+        locale=BROWSER_LOCALE,
+        device_scale_factor=2,
+        is_mobile=True,
+        has_touch=True,
+        reduced_motion="reduce",
+    )
+    phone_context.add_cookies([{
+        "name": ACCOUNT_SESSION_COOKIE_NAME, "value": run.context.account_session_token,
+        "domain": PUBLIC_BASE_HOST, "path": "/", "secure": True, "httpOnly": True, "sameSite": "Strict",
+    }])  # fmt: skip
+    return run.watch_page(phone_context.new_page())
+
+
+def read_account_session(context: FlowContext) -> dict[str, object]:
+    reply = context.http_client.get(f"{API_URL}/sessions/current", headers=context.account_headers)
+    reply.raise_for_status()
+    return reply.json()
+
+
+def save_account_settings_through_api(context: FlowContext, **fields: object) -> dict[str, object]:
+    reply = context.http_client.patch(f"{API_URL}/accounts/current", json=fields, headers=context.account_headers)
+    check(reply.status_code == 200, f"PATCH /accounts/current {fields} answered {reply.status_code} {reply.text}")
+    return reply.json()
+
+
+def read_invoice_window_seconds(invoice: dict[str, object]) -> float:
+    created_at = datetime.fromisoformat(str(invoice["created_at"]))
+    return (datetime.fromisoformat(str(invoice["expires_at"])) - created_at).total_seconds()
+
+
+def check_invoice_takes_chain_defaults(invoice: dict[str, object], *, what: str) -> None:
+    window_seconds = read_invoice_window_seconds(invoice)
+    check(invoice["accuracy_percent"] == CHAIN_ACCURACY_PERCENT
+          and abs(window_seconds - CHAIN_LIFETIME_MINUTES * 60) < 5,
+          f"{what}: {invoice['accuracy_percent']}% and {window_seconds} s, wanted the network's "
+          f"{CHAIN_ACCURACY_PERCENT}% and {CHAIN_LIFETIME_MINUTES} min")  # fmt: skip
+
+
+def check_settings_sheets_fit(run: BrowserScenarioRun, page: Page) -> None:
+    """/settings' groups in order, and every row's sheet within the 375 px screen."""
+    page.goto(f"{PUBLIC_BASE_URL}/settings")
+    expect(page.locator("#settings_accepted_coins_row")).to_be_visible(timeout=30_000)
+    headings = [heading.strip() for heading in page.locator("h2").all_inner_texts()]
+    check(headings == SETTINGS_GROUP_HEADINGS, f"/settings groups read {headings}")
+    check(not page_scrolls_sideways(page), "/settings scrolls sideways at 375 px")
+    run.take_screenshot(page, "settings")
+    for row_id in SETTINGS_SHEET_ROW_IDS:
+        page.click(f"#{row_id}")
+        expect(page.get_by_role("dialog").first).to_be_visible()
+        if row_id == "settings_invoice_export_row":
+            page.fill("#settings_invoice_export_from_input", "2026-10-01")
+            page.fill("#settings_invoice_export_to_input", "2026-10-22")
+        check_open_sheets_fit_the_screen(page, what=f"{row_id}'s sheet")
+        run.take_screenshot(page, f"{row_id}_sheet")
+        page.keyboard.press("Escape")
+        expect(page.get_by_role("dialog")).to_have_count(0)
+
+
+def save_chain_defaults_in_coins_sheet(run: BrowserScenarioRun, page: Page) -> None:
+    """The Coins sheet's section for the fork's network: a wrong window refused under its field, then this network's
+    time to pay and shortfall saved, and shown again after a reload."""
+    page.click("#settings_accepted_coins_row")
+    expect(page.locator(f"#settings_chain_section_{FORK_CHAIN_KEY}")).to_be_visible()
+    expect(page.locator(f"#settings_finality_note_{FORK_CHAIN_KEY}")).to_contain_text("finalized")
+    check(page.locator(f"#settings_confirmations_input_{FORK_CHAIN_KEY}").count() == 0,
+          "an EVM network offers a confirmation count")  # fmt: skip
+    lifetime_input = page.locator(f"#settings_lifetime_minutes_input_{FORK_CHAIN_KEY}")
+    lifetime_input.fill("3")
+    expect(page.locator(f"#settings_lifetime_minutes_error_{FORK_CHAIN_KEY}")).to_be_visible()
+    expect(page.locator("#settings_save_accepted_coins_button")).to_be_disabled()
+    lifetime_input.fill(str(CHAIN_LIFETIME_MINUTES))
+    # Typed with a decimal comma, as a comma locale writes it: read as 2.5, never as an empty field's default.
+    page.locator(f"#settings_accuracy_percent_input_{FORK_CHAIN_KEY}").fill(CHAIN_ACCURACY_PERCENT.replace(".", ","))
+    check_open_sheets_fit_the_screen(page, what="the filled Coins sheet")
+    run.take_screenshot(page, "coins_sheet_filled")
+    page.click("#settings_save_accepted_coins_button")
+    expect(page.get_by_role("dialog")).to_have_count(0)
+    session = read_account_session(run.context)
+    check(session["invoice_lifetime_seconds_by_chain"] == {FORK_CHAIN_KEY: CHAIN_LIFETIME_MINUTES * 60}
+          and session["accuracy_percent_by_chain"] == {FORK_CHAIN_KEY: CHAIN_ACCURACY_PERCENT},
+          f"the session after Save: {session}")  # fmt: skip
+    page.reload()
+    page.click("#settings_accepted_coins_row")
+    expect(page.locator(f"#settings_lifetime_minutes_input_{FORK_CHAIN_KEY}")).to_have_value(
+        str(CHAIN_LIFETIME_MINUTES)
+    )
+    page.keyboard.press("Escape")
+    expect(page.get_by_role("dialog")).to_have_count(0)
+
+
+def create_invoice_on_narrow_front_page(page: Page) -> str:
+    """/ at 375 px with Options left empty ("Network default"), its sheets within the screen; returns the invoice id."""
+    page.goto(f"{PUBLIC_BASE_URL}/")
+    expect(page.locator("#create_button")).to_be_enabled(timeout=30_000)
+    page.click("#invoice_options_button")
+    expect(page.locator("#lifetime_minutes_input")).to_have_attribute("placeholder", "Network default")
+    check_open_sheets_fit_the_screen(page, what="the options sheet on /")
+    page.click("#invoice_options_done_button")
+    expect(page.get_by_role("dialog")).to_have_count(0)
+    page.click("#accepted_coins_button")
+    expect(page.locator('[data-testid^="accepted_coin_toggle_"]').first).to_be_visible()
+    check_open_sheets_fit_the_screen(page, what="the coins sheet on /")
+    page.keyboard.press("Escape")
+    expect(page.get_by_role("dialog")).to_have_count(0)
+    page.fill("#amount_input", "2")
+    page.click("#create_button")
+    page.wait_for_url(re.compile(r"/i/inv_"), timeout=30_000)
+    expect(page.get_by_test_id("creator_share_overlay")).to_be_visible()
+    check_open_sheets_fit_the_screen(page, what="the share Drawer")
+    return read_invoice_id_from_url(page.url)
+
+
+def check_link_payer_invoice_takes_chain_defaults(context: FlowContext) -> str:
+    """A quantity link made without terms reads null and gives its payer's invoice the network's; returns its id."""
+    link_reply = context.http_client.post(
+        f"{API_URL}/payment-links", headers=context.account_headers,
+        json={"amount": "2", "currency": "USD", "chain": FORK_CHAIN_KEY, "assets": ["USDC"], "quantity": 1,
+              "note": "Browser e2e: chain default link"},
+    )  # fmt: skip
+    check(link_reply.status_code == 201, f"link: {link_reply.status_code} {link_reply.text}")
+    payment_link = link_reply.json()
+    check(payment_link["lifetime_seconds"] is None and payment_link["accuracy_percent"] is None,
+          f"a link made without terms reads {payment_link['lifetime_seconds']}, "
+          f"{payment_link['accuracy_percent']}")  # fmt: skip
+    slot_reply = context.http_client.post(
+        f"{API_URL}/public/payment-links/{payment_link['id']}/invoices", json={"asset": "USDC", "chain": FORK_CHAIN_KEY}
+    )
+    check(slot_reply.status_code == 201, f"slot: {slot_reply.status_code} {slot_reply.text}")
+    link_invoice = read_invoice(context, str(slot_reply.json()["id"]))
+    check_invoice_takes_chain_defaults(link_invoice, what="the link payer's invoice")
+    close_reply = context.http_client.post(
+        f"{API_URL}/payment-links/{payment_link['id']}/close", headers=context.account_headers
+    )
+    close_reply.raise_for_status()
+    return str(link_invoice["id"])
+
+
+def check_chain_default_refusals(context: FlowContext) -> None:
+    """An unknown network and a shortfall out of bounds are refused."""
+    unknown_reply = context.http_client.patch(
+        f"{API_URL}/accounts/current", json={"invoice_lifetime_seconds_by_chain": {"no_such_chain": 600}},
+        headers=context.account_headers,
+    )  # fmt: skip
+    check(unknown_reply.status_code == 400 and unknown_reply.json()["code"] == "chain_not_enabled",
+          f"an unknown network answered {unknown_reply.status_code} {unknown_reply.text}")  # fmt: skip
+    bounds_reply = context.http_client.patch(
+        f"{API_URL}/accounts/current", json={"accuracy_percent_by_chain": {FORK_CHAIN_KEY: "5.01"}},
+        headers=context.account_headers,
+    )  # fmt: skip
+    check(bounds_reply.status_code in {400, 422}, f"5.01% answered {bounds_reply.status_code} {bounds_reply.text}")
+
+
+def scenario_settings_per_chain_defaults_and_sheet_widths(
+    context: FlowContext,
+    *,
+    browser: Browser,
+) -> dict[str, object]:
+    """/settings at 375 px: the groups in order, every row's sheet within the screen; the Coins sheet's per-network
+    time to pay and shortfall saved and taken by an invoice made on / with Options left empty, an account invoice and
+    a quantity link's payer invoice made without them over the API, but not by an invoice that names its own; an
+    unknown network and an out-of-bounds shortfall refused; everything cleared again at the end."""
+    run = BrowserScenarioRun(context=context, browser=browser, scenario_name="settings_widths")
+    page = open_narrow_phone_page(run)
+    try:
+        check_settings_sheets_fit(run, page)
+        save_chain_defaults_in_coins_sheet(run, page)
+        form_invoice = read_invoice(context, create_invoice_on_narrow_front_page(page))
+        check_invoice_takes_chain_defaults(form_invoice, what="/'s invoice with Options left empty")
+        defaulted_invoice = create_invoice_within_write_budget(context, amount="2", currency="USD", assets=["USDC"])
+        check_invoice_takes_chain_defaults(defaulted_invoice, what="an API invoice without terms")
+        explicit_invoice = create_invoice_within_write_budget(
+            context, amount="2", currency="USD", assets=["USDC"], lifetime_seconds=600, accuracy_percent="0.5"
+        )
+        check(explicit_invoice["accuracy_percent"] == "0.5"
+              and abs(read_invoice_window_seconds(explicit_invoice) - 600) < 5,
+              f"an API invoice with its own terms: {explicit_invoice}")  # fmt: skip
+        link_invoice_id = check_link_payer_invoice_takes_chain_defaults(context)
+        check_chain_default_refusals(context)
+        run.check_no_page_errors()
+        return {"form_invoice_id": form_invoice["id"], "defaulted_invoice_id": defaulted_invoice["id"],
+                "explicit_invoice_id": explicit_invoice["id"], "link_invoice_id": link_invoice_id,
+                "screenshots": run.screenshot_paths}  # fmt: skip
+    finally:
+        # Every later scenario expects the server's 30 minutes and 1%.
+        cleared = save_account_settings_through_api(
+            context,
+            invoice_lifetime_seconds_by_chain={FORK_CHAIN_KEY: None},
+            accuracy_percent_by_chain={FORK_CHAIN_KEY: None},
+        )
+        check(cleared["invoice_lifetime_seconds_by_chain"] == {} and cleared["accuracy_percent_by_chain"] == {},
+              f"the defaults did not clear: {cleared}")  # fmt: skip
+        page.context.close()
+
+
 # ---- Watcher silence (scenario 9) ----
 
 # The API alerts after 120 s without a tick and checks once a minute: about three minutes, with slack.
@@ -1902,6 +2173,7 @@ BROWSER_SCENARIOS: list[Callable[..., dict[str, object]]] = [
     scenario_wrong_coin_shown_and_sent_back,
     scenario_i_paid_checks_the_chain,
     scenario_send_lock_survives_a_reload,
+    scenario_settings_per_chain_defaults_and_sheet_widths,
     # Last: it stops the watcher for about three minutes.
     scenario_watcher_silence_alerts_the_operator,
 ]

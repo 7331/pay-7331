@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import datetime
+from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, SecretStr
@@ -34,6 +35,10 @@ class AccountAccess(BaseModel):
     # The confirmations an XMR invoice counts final at, per enabled Monero chain key; a chain left out stands at the
     # chain's default.
     confirmations_final_by_chain: dict[str, int]
+    # The payment window (seconds) and accepted shortfall (percent, a decimal string) the account's invoices take per
+    # enabled chain key when their maker sets none; a chain left out stands at the server's default.
+    invoice_lifetime_seconds_by_chain: dict[str, int]
+    accuracy_percent_by_chain: dict[str, str]
     # As saved: an email address, a Telegram handle or an https link; None when unset.
     support_contact: str | None
 
@@ -49,6 +54,8 @@ class AccountAccess(BaseModel):
             account_passkey_id=self.account_passkey_id,
             accepted_asset_symbols_by_chain=self.accepted_asset_symbols_by_chain,
             confirmations_final_by_chain=self.confirmations_final_by_chain,
+            invoice_lifetime_seconds_by_chain=self.invoice_lifetime_seconds_by_chain,
+            accuracy_percent_by_chain=self.accuracy_percent_by_chain,
             support_contact=self.support_contact,
         )
 
@@ -64,6 +71,8 @@ class AccountAccess(BaseModel):
             account_passkey_id=self.account_passkey_id,
             accepted_asset_symbols_by_chain=accepted_asset_symbols_by_chain,
             confirmations_final_by_chain=self.confirmations_final_by_chain,
+            invoice_lifetime_seconds_by_chain=self.invoice_lifetime_seconds_by_chain,
+            accuracy_percent_by_chain=self.accuracy_percent_by_chain,
             support_contact=self.support_contact,
         )
 
@@ -77,6 +86,25 @@ class AccountAccess(BaseModel):
             account_passkey_id=self.account_passkey_id,
             accepted_asset_symbols_by_chain=self.accepted_asset_symbols_by_chain,
             confirmations_final_by_chain=confirmations_final_by_chain,
+            invoice_lifetime_seconds_by_chain=self.invoice_lifetime_seconds_by_chain,
+            accuracy_percent_by_chain=self.accuracy_percent_by_chain,
+            support_contact=self.support_contact,
+        )
+
+    def with_invoice_payment_terms_by_chain(
+        self, *, invoice_lifetime_seconds_by_chain: dict[str, int], accuracy_percent_by_chain: dict[str, str]
+    ) -> "AccountAccess":
+        """The same access after the per-chain payment windows and shortfalls were saved."""
+        return AccountAccess(
+            account_id=self.account_id,
+            username=self.username,
+            payout_address=self.payout_address,
+            account_session_id=self.account_session_id,
+            account_passkey_id=self.account_passkey_id,
+            accepted_asset_symbols_by_chain=self.accepted_asset_symbols_by_chain,
+            confirmations_final_by_chain=self.confirmations_final_by_chain,
+            invoice_lifetime_seconds_by_chain=invoice_lifetime_seconds_by_chain,
+            accuracy_percent_by_chain=accuracy_percent_by_chain,
             support_contact=self.support_contact,
         )
 
@@ -90,6 +118,8 @@ class AccountAccess(BaseModel):
             account_passkey_id=self.account_passkey_id,
             accepted_asset_symbols_by_chain=self.accepted_asset_symbols_by_chain,
             confirmations_final_by_chain=self.confirmations_final_by_chain,
+            invoice_lifetime_seconds_by_chain=self.invoice_lifetime_seconds_by_chain,
+            accuracy_percent_by_chain=self.accuracy_percent_by_chain,
             support_contact=support_contact,
         )
 
@@ -150,7 +180,19 @@ class StartedAccountSession(BaseModel):
     payout_address: str
     accepted_asset_symbols_by_chain: dict[str, list[str]]
     confirmations_final_by_chain: dict[str, int]
+    invoice_lifetime_seconds_by_chain: dict[str, int]
+    accuracy_percent_by_chain: dict[str, str]
     support_contact: str | None
+
+
+class SavedInvoicePaymentTerms(BaseModel):
+    """An account's saved payment window and shortfall per chain key, as a new invoice of its reads them; a chain left
+    out takes the server's default."""
+
+    model_config = ConfigDict(frozen=True)
+
+    lifetime_seconds_by_chain: dict[str, int]
+    accuracy_percent_by_chain: dict[str, Decimal]
 
 
 class PayoutAddressChange(BaseModel):

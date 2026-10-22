@@ -139,6 +139,52 @@ class AccountRepository:
             )
         )
 
+    async def merge_invoice_payment_terms_by_chain(
+        self,
+        account_id: int,
+        *,
+        invoice_lifetime_seconds_by_chain: dict[str, int | None],
+        accuracy_percent_by_chain: dict[str, str | None],
+    ) -> None:
+        """Replaces the named chains' payment windows and shortfalls in one statement (jsonb ``||``, then ``-`` for the
+        chains a `null` clears); other chains' stay."""
+        await self.session.execute(
+            update(Account)
+            .where(Account.id == account_id)
+            .values(
+                invoice_lifetime_seconds_by_chain=Account.invoice_lifetime_seconds_by_chain.op("||")(
+                    type_coerce(
+                        {key: value for key, value in invoice_lifetime_seconds_by_chain.items() if value is not None},
+                        JSONB,
+                    )
+                ).op("-")(
+                    type_coerce(
+                        [key for key, value in invoice_lifetime_seconds_by_chain.items() if value is None], ARRAY(Text)
+                    )
+                ),
+                accuracy_percent_by_chain=Account.accuracy_percent_by_chain.op("||")(
+                    type_coerce(
+                        {key: value for key, value in accuracy_percent_by_chain.items() if value is not None}, JSONB
+                    )
+                ).op("-")(
+                    type_coerce([key for key, value in accuracy_percent_by_chain.items() if value is None], ARRAY(Text))
+                ),
+            )
+        )
+
+    async def find_invoice_payment_terms_by_chain(self, account_id: int) -> tuple[dict[str, int], dict[str, str]]:
+        """The account's saved payment windows and shortfalls per chain key, as saved."""
+        saved_row = (
+            await self.session.execute(
+                select(Account.invoice_lifetime_seconds_by_chain, Account.accuracy_percent_by_chain).where(
+                    Account.id == account_id
+                )
+            )
+        ).one_or_none()
+        if saved_row is None:
+            return {}, {}
+        return dict(saved_row[0] or {}), dict(saved_row[1] or {})
+
     async def find_confirmations_final_by_chain(self, account_id: int) -> dict[str, int]:
         """The account's saved confirmations per Monero chain key, as saved (a chain of another kind's key cannot be
         in there: the save validates)."""

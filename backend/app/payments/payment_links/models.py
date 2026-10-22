@@ -45,8 +45,9 @@ class PaymentLink(Base):
     return_url: Mapped[str | None] = mapped_column(String(2048))
     # 1 to 1000 payers.
     quantity: Mapped[int] = mapped_column(Integer)
-    # Each payer's invoice lives this long and asks for payment within this accuracy.
-    lifetime_seconds: Mapped[int] = mapped_column(Integer)
-    accuracy_percent: Mapped[Decimal] = mapped_column(Numeric(4, 2))
+    # Each payer's invoice lives this long and asks for payment within this accuracy. Null (migration 0037): the
+    # account's default for the chain the payer picks, read when that payer's invoice is made, else the server's.
+    lifetime_seconds: Mapped[int | None] = mapped_column(Integer)
+    accuracy_percent: Mapped[Decimal | None] = mapped_column(Numeric(4, 2))
     # Set when the maker closes it; no payer gets a new invoice after.
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

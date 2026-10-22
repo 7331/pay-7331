@@ -37,6 +37,11 @@ class Account(Base):
     # with no entry stands at the chain's chains.toml default; the receiver alone carries the double-spend risk, so it
     # is the receiver's choice (migration 0028).
     confirmations_final_by_chain: Mapped[dict[str, int]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    # The payment window (seconds) and the accepted shortfall (percent, a decimal string) this account's invoices take
+    # per chain key when their maker sets none: {"polygon": 3600} and {"polygon": "0.5"}. A chain with no entry takes
+    # the server's default (migration 0037).
+    invoice_lifetime_seconds_by_chain: Mapped[dict[str, int]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    accuracy_percent_by_chain: Mapped[dict[str, str]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
     # Shown to the payers of this account's invoices: an email address, a Telegram handle (`@name`) or an https link,
     # as typed (migration 0011). Null: none.
     support_contact: Mapped[str | None] = mapped_column(String(SUPPORT_CONTACT_MAXIMUM_LENGTH))

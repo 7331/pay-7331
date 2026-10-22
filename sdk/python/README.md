@@ -76,7 +76,8 @@ Every route an API token may call, plus the public reads a server needs:
 `create_invoice` takes the API's fields as keyword arguments: `amount`, `currency`, `chain`, `chains`, `assets`,
 `assets_by_chain`, `destination_address`, `allow_contract_destination`, `note`, `order_id`, `refresh_expired`,
 `lifetime_seconds`, `accuracy_percent`, `underpaid_open_until`, `return_url`, `success_url`, `callback_url`,
-`metadata`. Anything left out takes the API's default. The docs page explains each one.
+`metadata`. Anything left out takes the API's default (for `lifetime_seconds` and `accuracy_percent`, the account's
+setting for each chain, else 30 minutes and 1%). The docs page explains each one.
 
 Amounts are `str`, `Decimal` or `int` going out and `Decimal` coming back, built from the API's decimal strings
 exactly; a float is refused. Times are timezone-aware `datetime`. Statuses are plain strings, so a status the API adds

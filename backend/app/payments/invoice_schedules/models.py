@@ -55,8 +55,10 @@ class InvoiceSchedule(Base):
     # Each invoice's order id is this, a dash and its period's start day (`plan-77-20261021`); the schedule's id when
     # left out.
     order_id_prefix: Mapped[str | None] = mapped_column(String(100))
-    lifetime_seconds: Mapped[int] = mapped_column(Integer)
-    accuracy_percent: Mapped[Decimal] = mapped_column(Numeric(4, 2))
+    # Null (migration 0037): each invoice takes the account's default for its chain when it is made, else the
+    # server's (12 hours, 1%).
+    lifetime_seconds: Mapped[int | None] = mapped_column(Integer)
+    accuracy_percent: Mapped[Decimal | None] = mapped_column(Numeric(4, 2))
     return_url: Mapped[str | None] = mapped_column(String(2048))
     success_url: Mapped[str | None] = mapped_column(String(2048))
     callback_url: Mapped[str | None] = mapped_column(String(2048))

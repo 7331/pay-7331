@@ -37,8 +37,11 @@ class NewInvoice(BaseModel):
     allow_contract_destination: bool = False
     note: str = ""
     order_id: str | None = None
-    lifetime_seconds: int
-    accuracy_percent: Decimal
+    # The maker's payment window and accepted shortfall for every offered chain; None: each chain takes the account's
+    # saved default for it, else the server's 30 minutes and 1%, resolved once when the
+    # invoice is made (``invoice_payment_terms.py``).
+    lifetime_seconds: int | None = None
+    accuracy_percent: Decimal | None = None
     underpaid_open_until: datetime | None = None
     return_url: str | None = None
     # The payer's link after paying, over ``return_url`` (2026-10-21).
@@ -55,6 +58,15 @@ class NewInvoice(BaseModel):
     # With ``order_id``: an expired, unpaid invoice of that order is replaced by this new one instead of returned
     # (Cryptomus ``is_refresh``; PLAN.md section 4, 2026-10-21).
     refresh_expired: bool = False
+
+
+class InvoicePaymentTerms(BaseModel):
+    """One chain's payment window and accepted shortfall on one invoice, as resolved when it was made."""
+
+    model_config = ConfigDict(frozen=True)
+
+    lifetime_seconds: int
+    accuracy_percent: Decimal
 
 
 class AccountInvoiceOffer(BaseModel):

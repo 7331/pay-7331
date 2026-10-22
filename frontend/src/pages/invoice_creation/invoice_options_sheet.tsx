@@ -3,6 +3,7 @@
 // itself (the shortfall, the order id, the contract tick); placeholders are examples. A wrong value shows under its
 // field; "Create link" opens the sheet at the first one. "Repeat" turns the invoice into a schedule (invoice_options.ts). Each change applies at once; "Done" only closes it.
 import { ResponsiveSheet } from "@/components/responsive_sheet"
+import { TemporalInput } from "@/components/temporal_input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -15,12 +16,10 @@ import type { ChainAsset } from "@/lib/api_types"
 import { primaryActionButtonClassName } from "@/lib/button_size_class_names"
 import { cn } from "@/lib/utils"
 import {
-  defaultInvoiceOptions,
   fiatCurrencyCodes,
   lifetimePresets,
   maximumPayerQuantity,
   repeatIntervalChoices,
-  repeatingInvoiceLifetimeMinutesText,
   type InvoiceOptionFieldErrors,
   type InvoiceOptionFieldName,
   type InvoiceOptions,
@@ -119,12 +118,7 @@ export function InvoiceOptionsSheet({
             onValueChange={(pickedValue) => {
               if (!pickedValue) return
               const repeatInterval = pickedValue === "never" ? "" : (pickedValue as InvoiceOptions["repeatInterval"])
-              // A repeating invoice reaches its payer later: the untouched 30 minutes become the longest wait.
-              const lifetimeChange =
-                repeatInterval && options.lifetimeMinutesText === defaultInvoiceOptions.lifetimeMinutesText
-                  ? { lifetimeMinutesText: repeatingInvoiceLifetimeMinutesText }
-                  : {}
-              changeCheckedOption("repeatInterval", { repeatInterval, ...lifetimeChange })
+              changeCheckedOption("repeatInterval", { repeatInterval })
             }}
             className="grid w-full grid-cols-4"
             aria-label="Repeat"
@@ -156,9 +150,8 @@ export function InvoiceOptionsSheet({
             variant="outline"
             spacing={0}
             value={lifetimePresets.some((lifetimePreset) => lifetimePreset.minutes === options.lifetimeMinutesText) ? options.lifetimeMinutesText : ""}
-            onValueChange={(presetMinutes) => {
-              if (presetMinutes) changeCheckedOption("lifetimeMinutes", { lifetimeMinutesText: presetMinutes })
-            }}
+            // Tapping the picked preset again goes back to the chain default.
+            onValueChange={(presetMinutes) => changeCheckedOption("lifetimeMinutes", { lifetimeMinutesText: presetMinutes, lifetimeMinutesTextIsUnreadable: false })}
             className="grid w-full grid-cols-5"
             aria-label="Time to pay presets"
           >
@@ -182,10 +175,13 @@ export function InvoiceOptionsSheet({
               max={720}
               step={1}
               aria-label="Time to pay in minutes"
+              placeholder={options.repeatInterval ? "12 h" : "Network default"}
               aria-invalid={Boolean(fieldErrors.lifetimeMinutes) || undefined}
               aria-describedby={fieldErrors.lifetimeMinutes ? "lifetime_minutes_error" : undefined}
               value={options.lifetimeMinutesText}
-              onChange={(changeEvent) => changeCheckedOption("lifetimeMinutes", { lifetimeMinutesText: changeEvent.target.value })}
+              onChange={(changeEvent) => changeCheckedOption("lifetimeMinutes", { lifetimeMinutesText: changeEvent.target.value, lifetimeMinutesTextIsUnreadable: changeEvent.target.validity.badInput })}
+              // React skips onChange while the value stays "", as it does when the browser cannot read what is typed.
+              onInput={(inputEvent) => onOptionsChange({ lifetimeMinutesTextIsUnreadable: inputEvent.currentTarget.validity.badInput })}
               className="px-3.5 text-base"
             />
             <InputGroupAddon align="inline-end">
@@ -211,23 +207,21 @@ export function InvoiceOptionsSheet({
         </Field>
         <Field>
           <FieldLabel htmlFor="underpaid_open_until_input">Top-ups open until</FieldLabel>
-          <Input
+          <TemporalInput
             id="underpaid_open_until_input"
             type="datetime-local"
             value={options.underpaidOpenUntilLocal}
             onChange={(changeEvent) => changeCheckedOption("payerQuantity", { underpaidOpenUntilLocal: changeEvent.target.value })}
-            className={inputClassName}
           />
         </Field>
         <Field data-invalid={Boolean(fieldErrors.accuracyPercent) || undefined}>
           <FieldLabel htmlFor="accuracy_percent_input">Accepted shortfall, %</FieldLabel>
           <Input
             id="accuracy_percent_input"
-            type="number"
+            type="text"
             inputMode="decimal"
-            min={0}
-            max={5}
-            step={0.1}
+            autoComplete="off"
+            placeholder="Network default"
             aria-invalid={Boolean(fieldErrors.accuracyPercent) || undefined}
             aria-describedby={fieldErrors.accuracyPercent ? "accuracy_percent_error" : "accuracy_percent_description"}
             value={options.accuracyPercentText}
@@ -237,7 +231,7 @@ export function InvoiceOptionsSheet({
           {fieldErrors.accuracyPercent ? (
             <FieldError id="accuracy_percent_error">{fieldErrors.accuracyPercent}</FieldError>
           ) : (
-            <FieldDescription id="accuracy_percent_description">Paid this much short still counts as paid.</FieldDescription>
+            <FieldDescription id="accuracy_percent_description">Paid this much short still counts as paid. Empty: each network's default from Settings.</FieldDescription>
           )}
         </Field>
         <Field>

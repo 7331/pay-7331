@@ -1,9 +1,10 @@
-// `/settings`' "Monero wallet" row and its sheet (PLAN.md section 14, 2026-10-14), shown only while a Monero chain is
-// enabled (`/chains` lists one; until then nothing renders and nothing is fetched): the receiver's own wallet, which XMR
-// links pay at a fresh subaddress each. Setting or changing it asks for a fresh passkey check bound to that wallet, like
-// the payout address. The private view key lives only in the form's state while it is open (a masked text field that
-// no password manager offers to save) and goes to the API once; the API never sends it back. The sheet also says to
-// use a dedicated wallet, that payments land in account 1, and how to widen the wallet's lookahead, with "I set it".
+// One Monero chain's "Wallet" row and its sheet (PLAN.md section 14, 2026-10-14), inside that chain's section of
+// `/settings`' "Coins and networks" sheet (account_chain_settings_sheet.tsx), which shows it only for an enabled Monero
+// chain: the receiver's own wallet, which XMR links pay at a fresh subaddress each. Setting or changing it asks for a
+// fresh passkey check bound to that wallet, like the payout address. The private view key lives only in the form's
+// state while it is open (a masked text field that no password manager offers to save) and goes to the API once; the
+// API never sends it back. The sheet also says to use a dedicated wallet, that payments land in account 1, and how to
+// widen the wallet's lookahead, with "I set it". It opens on top of that sheet (a nested Drawer on a phone).
 import { ArrowLeft, Fingerprint } from "lucide-react"
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { toast } from "sonner"
@@ -17,12 +18,10 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { useAccountSession } from "@/hooks/use_account_session"
-import { useChainList } from "@/hooks/use_chain_list"
 import { shortenMoneroAddress } from "@/lib/amount_formatting"
 import { ApiError, describeError } from "@/lib/api_client"
-import type { AccountMoneroWalletSettings, MoneroChainSummary } from "@/lib/api_types"
+import type { AccountMoneroWalletSettings as AccountMoneroWalletSettingsResponse, MoneroChainSummary } from "@/lib/api_types"
 import { primaryActionButtonClassName, touchTargetButtonClassName } from "@/lib/button_size_class_names"
 import {
   confirmMoneroLookahead,
@@ -35,18 +34,10 @@ import {
 import { describePasskeyError, passkeysAreSupported, setAccountMoneroWalletWithPasskey } from "@/lib/passkey_access"
 import { cn } from "@/lib/utils"
 
-// Asks for the wallet only once `/chains` lists a Monero chain: a Polygon-only deployment shows no row and makes no
-// request, and a failed `/chains` read shows no row either (the page's other rows say when the API is down).
-export function AccountMoneroWalletSettings() {
-  const { chains } = useChainList()
-  const moneroChainIsEnabled = chains?.some((chain) => chain.kind === "monero") ?? false
-  return moneroChainIsEnabled ? <EnabledMoneroWalletSettings /> : null
-}
-
-function EnabledMoneroWalletSettings() {
+// The wallet of one Monero chain: its row, then its sheet once tapped.
+export function AccountMoneroWalletSettings({ moneroChainKey }: { moneroChainKey: string }) {
   const { refreshAccountSession } = useAccountSession()
-  const [walletSettings, setWalletSettings] = useState<AccountMoneroWalletSettings | null>(null)
-  const [pickedChainKey, setPickedChainKey] = useState<string | null>(null)
+  const [walletSettings, setWalletSettings] = useState<AccountMoneroWalletSettingsResponse | null>(null)
   const [loadError, setLoadError] = useState("")
   const [sheetIsOpen, setSheetIsOpen] = useState(false)
   const [showsWalletForm, setShowsWalletForm] = useState(false)
@@ -55,33 +46,28 @@ function EnabledMoneroWalletSettings() {
 
   // The state changes in the promise callbacks, once the API answers, never synchronously in the effect below.
   const reloadWalletSettings = useCallback(
-    (chainKey?: string) =>
-      readMoneroWalletSettings(chainKey).then(
+    () =>
+      readMoneroWalletSettings(moneroChainKey).then(
         (loadedWalletSettings) => {
           setWalletSettings(loadedWalletSettings)
           setLoadError("")
         },
         (loadFailure: unknown) => setLoadError(describeError(loadFailure)),
       ),
-    [],
+    [moneroChainKey],
   )
 
   useEffect(() => {
     void reloadWalletSettings()
   }, [reloadWalletSettings])
 
-  // Nothing until the wallet read answers; a deployment that lists no Monero chain after all shows no row.
-  if (!loadError && (walletSettings === null || walletSettings.monero_chains.length === 0)) return null
-
-  const moneroChains = walletSettings?.monero_chains ?? []
-  const wallet = walletSettings?.wallet ?? null
-  const currentChain = moneroChains.find((moneroChain) => moneroChain.key === (pickedChainKey ?? wallet?.chain_key)) ?? moneroChains[0]
+  const wallet = walletSettings?.wallet?.chain_key === moneroChainKey ? walletSettings.wallet : null
+  const currentChain = walletSettings?.monero_chains.find((moneroChain) => moneroChain.key === moneroChainKey)
   const lookaheadIsWidened = (wallet?.confirmed_lookahead_minor_count ?? 0) >= widenedMoneroLookaheadMinorCount
-
-  async function pickChain(chainKey: string) {
-    setPickedChainKey(chainKey)
-    await reloadWalletSettings(chainKey)
-  }
+  let rowValueText = "…"
+  if (loadError) rowValueText = "Can't load"
+  else if (wallet) rowValueText = shortenMoneroAddress(wallet.primary_address)
+  else if (walletSettings) rowValueText = "Off"
 
   async function confirmWidenedLookahead() {
     if (!wallet) return
@@ -99,15 +85,18 @@ function EnabledMoneroWalletSettings() {
 
   return (
     <>
-      <AccountSettingsRow
-        id="settings_monero_wallet_row"
-        title="Monero wallet"
-        valueText={loadError ? "Can't load" : wallet ? shortenMoneroAddress(wallet.primary_address) : "Off"}
-        valueIsMonospace={Boolean(wallet) && !loadError}
-        valueTone={loadError ? "problem" : "default"}
-        onOpen={() => setSheetIsOpen(true)}
-      />
+      <div className="overflow-hidden rounded-2xl border">
+        <AccountSettingsRow
+          id={`settings_monero_wallet_row_${moneroChainKey}`}
+          title="Wallet"
+          valueText={rowValueText}
+          valueIsMonospace={Boolean(wallet) && !loadError}
+          valueTone={loadError ? "problem" : "default"}
+          onOpen={() => setSheetIsOpen(true)}
+        />
+      </div>
       <ResponsiveSheet
+        isNested
         isOpen={sheetIsOpen}
         onOpenChange={(nextIsOpen) => {
           if (passkeyPromptIsOpen) return
@@ -118,31 +107,6 @@ function EnabledMoneroWalletSettings() {
         description={showsWalletForm ? "XMR links pay this wallet directly, each at a new subaddress. The view key lets this site see payments; it can't spend." : undefined}
         testId="settings_monero_wallet_sheet"
       >
-        {moneroChains.length > 1 && currentChain ? (
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            spacing={0}
-            value={currentChain.key}
-            disabled={passkeyPromptIsOpen}
-            onValueChange={(chainKey) => {
-              if (chainKey) void pickChain(chainKey)
-            }}
-            className="mb-5 grid w-full grid-cols-2"
-            aria-label="Monero network"
-          >
-            {moneroChains.map((moneroChain) => (
-              <ToggleGroupItem
-                key={moneroChain.key}
-                value={moneroChain.key}
-                data-testid={`settings_monero_chain_${moneroChain.key}`}
-                className="h-11 text-[15px] font-medium data-[state=on]:bg-foreground data-[state=on]:text-background"
-              >
-                {moneroChain.name}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        ) : null}
         {showsWalletForm && currentChain ? (
           <MoneroWalletForm
             key={currentChain.key}
@@ -249,7 +213,7 @@ function MoneroWalletForm({
   currentPrimaryAddress: string | null
   onPasskeyPromptChange(passkeyPromptIsOpen: boolean): void
   onBack(): void
-  onSaved(updatedWalletSettings: AccountMoneroWalletSettings): void
+  onSaved(updatedWalletSettings: AccountMoneroWalletSettingsResponse): void
 }) {
   const { refreshAccountSession } = useAccountSession()
   const [typedAddress, setTypedAddress] = useState("")
@@ -267,6 +231,9 @@ function MoneroWalletForm({
 
   async function confirmWithPasskey(submitEvent: FormEvent) {
     submitEvent.preventDefault()
+    // The sheet opens from inside the "Coins and networks" sheet's form: React carries a submit up through the portal,
+    // and the wallet change must never also save that form.
+    submitEvent.stopPropagation()
     setSaveError("")
     const trimmedAddress = typedAddress.trim()
     const trimmedViewKey = typedViewKey.trim()

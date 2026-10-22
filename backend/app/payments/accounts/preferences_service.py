@@ -4,9 +4,12 @@ creation and payer pages (PLAN.md section 7).
 - Accepted coins: each enabled chain's starting ticks, the saved ones the chain still lists, else
   its defaults; XMR only on a chain where the account has an active Monero wallet.
 - Confirmations before final: a count per enabled Monero chain, else the chain's default.
+- Payment window and accepted shortfall: per enabled chain, what the account's invoices take when their maker sets
+  none, else the server's default (``chains/invoice_payment_terms.py``).
 - The support contact is an email address, a Telegram handle or an https link; payer pages link it.
 """
 
+from decimal import Decimal
 from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,8 +17,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.payments.accounts import log_events
 from app.payments.accounts.repository import AccountRepository
 from app.payments.accounts.support_contacts import normalize_support_contact, parse_support_contact
-from app.payments.accounts.types import AccountAccess, SellerSupportContact
+from app.payments.accounts.types import AccountAccess, SavedInvoicePaymentTerms, SellerSupportContact
 from app.payments.chains.configuration import read_enabled_chains
+from app.payments.chains.invoice_payment_terms import format_accuracy_percent
 from app.payments.chains.service import ChainsService
 from app.payments.chains.types import MoneroChainConfiguration
 from app.payments.monero_wallets.service import list_active_monero_wallet_chain_keys
@@ -130,6 +134,70 @@ class AccountPreferencesService:
     async def find_saved_confirmations_final_by_chain(self, account_id: int) -> dict[str, int]:
         """The account's saved counts as saved, for an invoice's creation: the caller decides the chain default."""
         return await self.repository.find_confirmations_final_by_chain(account_id)
+
+    # ---- Payment window and accepted shortfall ----
+
+    def resolve_saved_values_of_enabled_chains[SavedValue](
+        self, saved_by_chain: dict[str, SavedValue]
+    ) -> dict[str, SavedValue]:
+        """The saved values of the chains enabled here, in their order; a chain left out (or saved but not enabled
+        here, kept in the row) stands at the server's default."""
+        return {
+            chain.key: saved_by_chain[chain.key] for chain in self.chains_service.chains if chain.key in saved_by_chain
+        }
+
+    async def save_invoice_payment_terms_by_chain(
+        self,
+        account_access: AccountAccess,
+        *,
+        invoice_lifetime_seconds_by_chain: dict[str, int | None],
+        accuracy_percent_by_chain: dict[str, Decimal | None],
+    ) -> tuple[dict[str, int], dict[str, str]]:
+        """Saves the named chains' payment windows and shortfalls (an unknown or disabled chain is 400, as the bounds
+        are checked by the request); a `null` clears the chain's back to the server's default. Answers every enabled
+        chain's saved ones after the save."""
+        for chain_key in [*invoice_lifetime_seconds_by_chain, *accuracy_percent_by_chain]:
+            self.chains_service.get_chain(chain_key)
+        normalized_accuracy_percent_by_chain = {
+            chain_key: format_accuracy_percent(accuracy_percent) if accuracy_percent is not None else None
+            for chain_key, accuracy_percent in accuracy_percent_by_chain.items()
+        }
+        if invoice_lifetime_seconds_by_chain or normalized_accuracy_percent_by_chain:
+            await self.repository.merge_invoice_payment_terms_by_chain(
+                account_access.account_id,
+                invoice_lifetime_seconds_by_chain=invoice_lifetime_seconds_by_chain,
+                accuracy_percent_by_chain=normalized_accuracy_percent_by_chain,
+            )
+            log.emit(
+                logger,
+                event=log_events.AccountInvoicePaymentTermsSaved(
+                    account_id=account_access.account_id,
+                    chain_keys=sorted({*invoice_lifetime_seconds_by_chain, *normalized_accuracy_percent_by_chain}),
+                ),
+            )
+        (
+            saved_lifetime_seconds_by_chain,
+            saved_accuracy_percent_by_chain,
+        ) = await self.repository.find_invoice_payment_terms_by_chain(account_access.account_id)
+        return (
+            self.resolve_saved_values_of_enabled_chains(saved_lifetime_seconds_by_chain),
+            self.resolve_saved_values_of_enabled_chains(saved_accuracy_percent_by_chain),
+        )
+
+    async def find_saved_invoice_payment_terms_by_chain(self, account_id: int) -> SavedInvoicePaymentTerms:
+        """The account's saved payment windows and shortfalls as saved, for an invoice's creation: the caller decides
+        the server default."""
+        (
+            saved_lifetime_seconds_by_chain,
+            saved_accuracy_percent_by_chain,
+        ) = await self.repository.find_invoice_payment_terms_by_chain(account_id)
+        return SavedInvoicePaymentTerms(
+            lifetime_seconds_by_chain=saved_lifetime_seconds_by_chain,
+            accuracy_percent_by_chain={
+                chain_key: Decimal(accuracy_percent_text)
+                for chain_key, accuracy_percent_text in saved_accuracy_percent_by_chain.items()
+            },
+        )
 
     # ---- Support contact ----
 

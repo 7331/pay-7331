@@ -34,6 +34,10 @@ class ListedChainResponse(InvoiceChain):
     assets: list[ChainAsset]
     # The coins a new invoice starts with ticked (signed out, or an account that saved none).
     default_accepted_assets: list[str]
+    # The payment window (seconds) and accepted shortfall (percent, a decimal string) an invoice on this chain takes
+    # when neither its maker nor its account set one.
+    default_invoice_lifetime_seconds: int
+    default_accuracy_percent: str
 
 
 class ChainListResponse(ApiResponse):

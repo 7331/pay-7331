@@ -28,6 +28,10 @@ Both networks read live prices over public endpoints, so the quotes are real and
    coins are exactly those, the invoice offers exactly those four pairs, and a reload of `/` shows them again.
 7. A coin-priced maker (currency USDC) starts with two networks, the currency leaves one network, and the maker switches
    it to Arbitrum: the invoice is made on Arbitrum.
+8. Per-network defaults (API): with 60 minutes and 0.5% saved on Polygon and 20 minutes and 2% on Arbitrum, an invoice
+   offering both made without terms waits 60 minutes for the pick, keeps both networks' terms, and the Arbitrum pick
+   gives it 20 minutes from the pick and 2%, even after the settings changed; a Polygon-only one gets 60 minutes and
+   0.5%.
 
 Screenshots, the log and the results go to the scratch folder. Nothing is sent to a real network.
 """
@@ -35,6 +39,7 @@ Screenshots, the log and the results go to the scratch folder. Nothing is sent t
 import argparse
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime
 from decimal import Decimal
 import functools
 from pathlib import Path
@@ -778,8 +783,71 @@ def scenario_coin_priced_usdc_maker_leaves_two_networks_then_switches_to_arbitru
             "screenshots": run.screenshot_paths}  # fmt: skip
 
 
+def read_window_seconds(invoice: dict[str, object], *, since: datetime) -> float:
+    return (datetime.fromisoformat(str(invoice["expires_at"])) - since).total_seconds()
+
+
+def scenario_each_network_takes_its_own_window_and_shortfall(context: FlowContext) -> dict[str, object]:
+    """8. Per-network defaults (API): the account saves 60 minutes and 0.5% on Polygon and 20 minutes and 2% on
+    Arbitrum. An invoice offering both, made without terms, waits for the pick with the longer window, snapshots both,
+    and on the pick takes the picked network's window (restarted from the pick) and shortfall; a settings change after
+    it was made moves nothing; a one-network invoice takes its network's at once. Cleared at the end."""
+    polygon_key, arbitrum_key = POLYGON_CHAIN.chain_key, ARBITRUM_CHAIN.chain_key
+
+    def save_defaults(lifetime_by_chain: dict[str, int | None], accuracy_by_chain: dict[str, str | None]) -> None:
+        reply = context.http_client.patch(
+            f"{API_URL}/accounts/current", headers=context.account_headers,
+            json={"invoice_lifetime_seconds_by_chain": lifetime_by_chain, "accuracy_percent_by_chain": accuracy_by_chain},
+        )  # fmt: skip
+        check(reply.status_code == 200, f"PATCH /accounts/current: {reply.status_code} {reply.text}")
+
+    def create_account_invoice(**fields: object) -> dict[str, object]:
+        reply = context.http_client.post(
+            f"{API_URL}/invoices", headers=context.account_headers,
+            json={"amount": "3", "currency": "USD", "destination_address": Account.create().address, **fields},
+        )  # fmt: skip
+        check(reply.status_code == 201, f"account invoice: {reply.status_code} {reply.text}")
+        return reply.json()
+
+    save_defaults({polygon_key: 3600, arbitrum_key: 1200}, {polygon_key: "0.5", arbitrum_key: "2"})
+    try:
+        both = create_account_invoice(
+            chains=[arbitrum_key, polygon_key], assets_by_chain={arbitrum_key: ["USDC"], polygon_key: ["USDC"]}
+        )
+        created_at = datetime.fromisoformat(str(both["created_at"]))
+        check(abs(read_window_seconds(both, since=created_at) - 3600) < 5,
+              f"the two-network invoice waits {read_window_seconds(both, since=created_at)} s for the pick")  # fmt: skip
+        check(re.fullmatch(r"inv_[0-9A-Za-z]+", str(both["id"])) is not None, f"not an invoice id: {both['id']}")
+        stored_terms_sql = f"payment_terms_by_chain -> '{arbitrum_key}'"
+        snapshot = run_sql(
+            context,
+            f"SELECT {stored_terms_sql} ->> 'lifetime_seconds', {stored_terms_sql} ->> 'accuracy_percent' FROM invoices WHERE id = '{both['id']}'",  # noqa: S608
+        )
+        stored_lifetime_text, stored_accuracy_text = snapshot.split("|")
+        check(stored_lifetime_text == "1200" and Decimal(stored_accuracy_text) == Decimal(2),
+              f"the stored Arbitrum terms: {snapshot}")  # fmt: skip
+        # Changed after the invoice was made: the invoice keeps what it was made with.
+        save_defaults({arbitrum_key: 900}, {arbitrum_key: "1"})
+        picked_at = datetime.now(UTC)
+        picked = pick_pair(context, str(both["id"]), chain=ARBITRUM_CHAIN)
+        check(picked.status_code == 200, f"pick: {picked.status_code} {picked.text}")
+        picked_account_view = read_invoice(context, str(both["id"]))
+        check(Decimal(str(picked_account_view["accuracy_percent"])) == Decimal(2),
+              f"picked shortfall {picked_account_view['accuracy_percent']}")  # fmt: skip
+        check(abs(read_window_seconds(picked_account_view, since=picked_at) - 1200) < 10,
+              f"the picked window is {read_window_seconds(picked_account_view, since=picked_at)} s, wanted 1200")  # fmt: skip
+        one = create_account_invoice(chains=[polygon_key], assets_by_chain={polygon_key: ["USDC"]})
+        check(Decimal(str(one["accuracy_percent"])) == Decimal("0.5")
+              and abs(read_window_seconds(one, since=datetime.fromisoformat(str(one["created_at"]))) - 3600) < 5,
+              f"the one-network invoice: {one['accuracy_percent']}%, {one['expires_at']}")  # fmt: skip
+        return {"two_network_invoice_id": both["id"], "one_network_invoice_id": one["id"], "snapshot": snapshot}
+    finally:
+        save_defaults({polygon_key: None, arbitrum_key: None}, {polygon_key: None, arbitrum_key: None})
+
+
 API_SCENARIOS: list[Callable[[FlowContext], dict[str, object]]] = [
     scenario_estimates_follow_the_stored_first_chain_and_each_networks_own_feed,
+    scenario_each_network_takes_its_own_window_and_shortfall,
 ]
 BROWSER_SCENARIOS: list[Callable[..., dict[str, object]]] = [
     scenario_quantity_one_link_races_two_networks_and_frees_the_slot_after_expiry,

@@ -2,7 +2,12 @@
 // beyond the amount, receiver, note, networks and coins: currency, how many payers, repeat, time to pay, return link,
 // top-ups deadline, accepted shortfall, order id, metadata and the contract tick. Their defaults, their checks (each wrong one
 // gets its own sentence, shown under its field in the options sheet) and the short summary `/` shows of the changed ones.
+// Time to pay and the shortfall start empty, "Network default": nothing is sent, and each network takes the account's
+// setting for it in `/settings`' "Coins and networks" sheet, else the server's (PLAN.md section 4); a typed value is for
+// this invoice. Only an empty field means the default: minutes the browser could not read and a shortfall that is not a
+// number are field errors, and a decimal comma ("0,5") is read as a point.
 
+import { normalizeAccuracyPercentText } from "@/lib/accuracy_percent_text"
 import type { InvoiceScheduleInterval } from "@/lib/api_types"
 
 export const fiatCurrencyCodes = ["USD", "EUR"]
@@ -15,8 +20,6 @@ export const repeatIntervalChoices: { value: "" | InvoiceScheduleInterval; label
   { value: "weekly", label: "Weekly" },
   { value: "monthly", label: "Monthly" },
 ]
-// A repeating invoice reaches its payer later, from the account's server, so it waits the longest an invoice may.
-export const repeatingInvoiceLifetimeMinutesText = "720"
 export const maximumPayerQuantity = 1000
 
 // Time-to-pay presets read faster than minutes; the minutes field under them takes any whole number from 5 to 720.
@@ -31,6 +34,8 @@ export const lifetimePresets = [
 export interface InvoiceOptions {
   currencyCode: string
   lifetimeMinutesText: string
+  // The minutes field holds text its browser could not read as a number (`validity.badInput`), so its value reads "".
+  lifetimeMinutesTextIsUnreadable: boolean
   // 1 makes a one-off invoice; more makes a quantity link that many payers pay, each once (2026-10-11).
   payerQuantityText: string
   // "" for a one-off invoice.
@@ -46,12 +51,13 @@ export interface InvoiceOptions {
 
 export const defaultInvoiceOptions: InvoiceOptions = {
   currencyCode: "USD",
-  lifetimeMinutesText: "30",
+  lifetimeMinutesText: "",
+  lifetimeMinutesTextIsUnreadable: false,
   payerQuantityText: "1",
   repeatInterval: "",
   returnUrl: "",
   underpaidOpenUntilLocal: "",
-  accuracyPercentText: "1",
+  accuracyPercentText: "",
   orderId: "",
   metadataText: "",
   allowContractDestination: false,
@@ -72,8 +78,9 @@ export type InvoiceOptionFieldErrors = Partial<Record<InvoiceOptionFieldName, st
 export interface CheckedInvoiceOptions {
   payerQuantity: number
   repeatInterval: InvoiceScheduleInterval | undefined
-  lifetimeSeconds: number
-  accuracyPercent: number
+  // undefined for "Network default".
+  lifetimeSeconds: number | undefined
+  accuracyPercent: number | undefined
   // undefined for an empty field: JSON.stringify drops it, so it isn't sent.
   underpaidOpenUntil: string | undefined
   returnUrl: string | undefined
@@ -125,15 +132,18 @@ export function checkInvoiceOptions(options: InvoiceOptions): {
   if (payerQuantityProblem) fieldErrors.payerQuantity = payerQuantityProblem
   const repeatProblem = describeRepeatProblem(options, payerQuantity)
   if (repeatProblem) fieldErrors.repeatInterval = repeatProblem
+  const lifetimeMinutesIsNetworkDefault = options.lifetimeMinutesText.trim() === "" && !options.lifetimeMinutesTextIsUnreadable
   const lifetimeMinutes = Number(options.lifetimeMinutesText)
-  if (!Number.isInteger(lifetimeMinutes) || lifetimeMinutes < 5 || lifetimeMinutes > 720) {
-    fieldErrors.lifetimeMinutes = "Pick a time, or type whole minutes from 5 to 720 (12 hours)."
+  if (!lifetimeMinutesIsNetworkDefault && (!Number.isInteger(lifetimeMinutes) || lifetimeMinutes < 5 || lifetimeMinutes > 720)) {
+    fieldErrors.lifetimeMinutes = "Pick a time, type whole minutes from 5 to 720 (12 hours), or leave it empty for the network default."
   }
   const trimmedReturnUrl = options.returnUrl.trim()
   if (trimmedReturnUrl && !URL.canParse(trimmedReturnUrl)) fieldErrors.returnUrl = "That isn't a full link: start it with https://"
-  const accuracyPercent = Number(options.accuracyPercentText)
-  if (options.accuracyPercentText.trim() === "" || !(accuracyPercent >= 0 && accuracyPercent <= 5)) {
-    fieldErrors.accuracyPercent = "From 0 to 5 percent."
+  const accuracyPercentText = normalizeAccuracyPercentText(options.accuracyPercentText)
+  const accuracyPercentIsNetworkDefault = accuracyPercentText === ""
+  const accuracyPercent = Number(accuracyPercentText)
+  if (!accuracyPercentIsNetworkDefault && !(/^\d+(\.\d+)?$/.test(accuracyPercentText) && accuracyPercent >= 0 && accuracyPercent <= 5)) {
+    fieldErrors.accuracyPercent = "From 0 to 5 percent, or empty for the network default."
   }
   let metadata: unknown = undefined
   if (options.metadataText.trim()) {
@@ -152,8 +162,8 @@ export function checkInvoiceOptions(options: InvoiceOptions): {
     checkedOptions: {
       payerQuantity,
       repeatInterval: options.repeatInterval || undefined,
-      lifetimeSeconds: lifetimeMinutes * 60,
-      accuracyPercent,
+      lifetimeSeconds: lifetimeMinutesIsNetworkDefault ? undefined : lifetimeMinutes * 60,
+      accuracyPercent: accuracyPercentIsNetworkDefault ? undefined : accuracyPercent,
       underpaidOpenUntil: options.underpaidOpenUntilLocal ? new Date(options.underpaidOpenUntilLocal).toISOString() : undefined,
       returnUrl: trimmedReturnUrl || undefined,
       orderId: options.orderId.trim() || undefined,
@@ -167,7 +177,7 @@ export function checkInvoiceOptions(options: InvoiceOptions): {
 export function summarizeChangedInvoiceOptions(options: InvoiceOptions): string[] {
   const changedOptionWords: string[] = []
   if (options.currencyCode !== defaultInvoiceOptions.currencyCode) changedOptionWords.push(options.currencyCode)
-  if (options.lifetimeMinutesText !== defaultInvoiceOptions.lifetimeMinutesText) {
+  if (options.lifetimeMinutesText.trim() !== defaultInvoiceOptions.lifetimeMinutesText && !options.lifetimeMinutesTextIsUnreadable) {
     const lifetimePreset = lifetimePresets.find((preset) => preset.minutes === options.lifetimeMinutesText)
     changedOptionWords.push(lifetimePreset?.label ?? `${options.lifetimeMinutesText.trim()} min`)
   }
@@ -177,7 +187,7 @@ export function summarizeChangedInvoiceOptions(options: InvoiceOptions): string[
   if (options.repeatInterval && repeatChoice) changedOptionWords.push(repeatChoice.label.toLowerCase())
   if (options.returnUrl.trim()) changedOptionWords.push("return link")
   if (options.underpaidOpenUntilLocal) changedOptionWords.push("top-ups deadline")
-  if (options.accuracyPercentText !== defaultInvoiceOptions.accuracyPercentText) {
+  if (options.accuracyPercentText.trim() !== defaultInvoiceOptions.accuracyPercentText) {
     changedOptionWords.push(`${options.accuracyPercentText.trim()}% shortfall`)
   }
   if (options.orderId.trim()) changedOptionWords.push("order id")

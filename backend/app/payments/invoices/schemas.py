@@ -5,13 +5,13 @@ one). Times are ISO 8601 UTC.
 """
 
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 import json
 import re
 from typing import Annotated, Literal
 
 from pydantic import AfterValidator, Field, JsonValue, SecretStr
 
+from app.payments.chains.invoice_payment_terms import AccuracyPercent, InvoiceLifetimeSeconds
 from app.payments.chains.schemas import ChainAsset, InvoiceChain
 from app.payments.invoices.enums import (
     InvoiceStatus,
@@ -31,10 +31,6 @@ from app.shared.schemas import (
     refuse_control_characters,
 )
 
-DEFAULT_LIFETIME_SECONDS = 30 * 60
-# 5 minutes to 12 hours, as Cryptomus.
-MINIMUM_LIFETIME_SECONDS = 5 * 60
-MAXIMUM_LIFETIME_SECONDS = 12 * 60 * 60
 ADDRESS_PATTERN = r"^0x[0-9a-fA-F]{40}$"
 DECIMAL_TEXT_PATTERN = r"^[0-9]+(\.[0-9]+)?$"
 # Room for the whole asset list of chains.toml (10 on Polygon, 2026-10-11) and a few more.
@@ -128,10 +124,10 @@ class CreateInvoiceRequest(ApiRequest):
     allow_contract_destination: bool = False
     note: MultilineText = Field(default="", max_length=500)
     order_id: IdentifierText | None = Field(default=None, min_length=1, max_length=128)
-    lifetime_seconds: int = Field(
-        default=DEFAULT_LIFETIME_SECONDS, ge=MINIMUM_LIFETIME_SECONDS, le=MAXIMUM_LIFETIME_SECONDS
-    )
-    accuracy_percent: Decimal = Field(default=Decimal("1.0"), ge=0, le=5, max_digits=4, decimal_places=2)
+    # The payment window and the accepted shortfall, for every chain the invoice offers. Left out (or null), each chain
+    # takes the account's saved default for it, else the server's (30 minutes, 1%), fixed on the invoice when it is made.
+    lifetime_seconds: InvoiceLifetimeSeconds | None = None
+    accuracy_percent: AccuracyPercent | None = None
     underpaid_open_until: RequestTime | None = None
     # Back to the shop (Cryptomus ``url_return``): the payer page's back button before paying, and its link after
     # paying when ``success_url`` is left out.
@@ -299,7 +295,10 @@ class InvoicePublicResponse(ApiResponse):
     return_url: str | None
     # The link after paying; the page falls back to ``return_url`` when null.
     success_url: str | None
-    expires_at: datetime | None
+    expires_at: datetime | None = Field(
+        description="When the payment window closes. On an invoice whose payer still picks among several networks it"
+        " is provisional (the longest window offered) and restarts with the picked network's window on the pick."
+    )
     underpaid_open_until: datetime | None
     payment_uri: str | None
     payments: list[InvoicePublicPayment]
@@ -324,7 +323,10 @@ class InvoiceAccountResponse(InvoicePublicResponse):
     destination_address: str
     order_id: str | None
     metadata: dict[str, JsonValue] | None
-    accuracy_percent: str
+    accuracy_percent: str = Field(
+        description="The accepted shortfall in percent. On an invoice whose payer still picks among several networks"
+        " it is provisional (the first network's) and becomes the picked network's on the pick."
+    )
     # The quantity link a payer made it from; null for every other invoice.
     payment_link_id: str | None
     # The invoice schedule that made it and the start of the period it bills; null for every other invoice.

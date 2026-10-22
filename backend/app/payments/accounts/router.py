@@ -70,6 +70,8 @@ def present_account_session_response(account_access: AccountAccess) -> AccountSe
         payout_address=account_access.payout_address,
         accepted_assets_by_chain=account_access.accepted_asset_symbols_by_chain,
         confirmations_final_by_chain=account_access.confirmations_final_by_chain,
+        invoice_lifetime_seconds_by_chain=account_access.invoice_lifetime_seconds_by_chain,
+        accuracy_percent_by_chain=account_access.accuracy_percent_by_chain,
         support_contact=account_access.support_contact,
     )
 
@@ -90,6 +92,8 @@ def start_session_response(response: Response, *, started_session: StartedAccoun
         payout_address=started_session.payout_address,
         accepted_assets_by_chain=started_session.accepted_asset_symbols_by_chain,
         confirmations_final_by_chain=started_session.confirmations_final_by_chain,
+        invoice_lifetime_seconds_by_chain=started_session.invoice_lifetime_seconds_by_chain,
+        accuracy_percent_by_chain=started_session.accuracy_percent_by_chain,
         support_contact=started_session.support_contact,
     )
 
@@ -196,7 +200,8 @@ async def update_current_account(
     account_preferences_service: AccountPreferencesServiceDependency,
 ) -> AccountSessionResponse:
     """The signed-in account's settings: the coins its invoices start with ticked, per chain, the confirmations its
-    XMR invoices count final at, per Monero chain, and the support contact its payers see. Only
+    XMR invoices count final at, per Monero chain, the payment window and accepted shortfall its invoices take per
+    chain when their maker sets none, and the support contact its payers see. Only
     the fields sent change. Answers the session view as ``GET /sessions/current`` would after the change. The payout
     address is not here: it changes only behind a fresh passkey check
     (``PUT /accounts/current/payout-address``)."""
@@ -216,6 +221,22 @@ async def update_current_account(
             account_access, confirmations_final_by_chain=update_request.confirmations_final_by_chain
         )
         account_access = account_access.with_confirmations_final_by_chain(confirmations_final_by_chain)
+    if (
+        update_request.invoice_lifetime_seconds_by_chain is not None
+        or update_request.accuracy_percent_by_chain is not None
+    ):
+        (
+            invoice_lifetime_seconds_by_chain,
+            accuracy_percent_by_chain,
+        ) = await account_preferences_service.save_invoice_payment_terms_by_chain(
+            account_access,
+            invoice_lifetime_seconds_by_chain=update_request.invoice_lifetime_seconds_by_chain or {},
+            accuracy_percent_by_chain=update_request.accuracy_percent_by_chain or {},
+        )
+        account_access = account_access.with_invoice_payment_terms_by_chain(
+            invoice_lifetime_seconds_by_chain=invoice_lifetime_seconds_by_chain,
+            accuracy_percent_by_chain=accuracy_percent_by_chain,
+        )
     return present_account_session_response(account_access)
 
 
